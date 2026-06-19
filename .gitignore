@@ -1,0 +1,18 @@
+# Node modullarini bloklash (Ikkala papkadagisini ham)
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Production build fayllari
+dist/
+client/dist/
+
+# Maxfiy xavfsizlik kalitlari (Buni yuklash mutlaqo mumkin emas!)
+.env
+server/.env
+client/.env
+
+# Tizim va log fayllari
+*.log
+.DS_Store
+.vscode/
