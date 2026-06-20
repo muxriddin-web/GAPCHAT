@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar"; 
 import ChatArea from "../components/ChatArea"; 
-import socket from "../socket";
+import socket from "../socket.js";
 
 function Home() {
   const [selectedUser, setSelectedUser] = useState(null);
