@@ -20,7 +20,7 @@ import { io } from "socket.io-client";
 // 1. HOSTING UCHUN URL DINAMIKLASHTIRISH
 // Loyihani Render/VPS-ga qo'yganingizda .env faylidagi VITE_BACKEND_URL ni o'qiydi.
 // Agar u topilmasa (mahalliy kompyuterda) localhost:5000 da ishlayveradi.
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://gapchat.onrender.com";
 
 const currentUser = JSON.parse(localStorage.getItem("userInfo")) || {};
 const userId = currentUser?._id;
