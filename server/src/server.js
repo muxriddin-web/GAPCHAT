@@ -21,7 +21,7 @@ const httpServer = createServer(app);
 
 // EXPRESS CORS
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: ["http://localhost:5173", "https://gapchat.netlify.app"],
   credentials: true
 }));
 app.use(express.json());
