@@ -4,15 +4,15 @@ import { FiLogOut, FiSearch, FiTrash2 } from "react-icons/fi";
 import API from "../api/axios";
 
 function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotifications }) {
-  // 1. OPTIMALLASHISH: localStorage'ni faqat bir marta (komponent ochilganda) o'qiymiz
   const [currentUser] = useState(() => JSON.parse(localStorage.getItem("userInfo")) || {});
   
-  const [users, setUsers] = useState([]);
-  const [search, setSearch] = useState("");
+  const [users, setUsers] = useState([]); // Eski chatlar
+  const [search, setSearch] = useState(""); // Qidiruv matni
+  const [searchResults, setSearchResults] = useState([]); // Global qidiruv natijalari
   const [openProfile, setOpenProfile] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
 
-  // GET USERS (Chatlar ro'yxatini yuklash)
+  // 1. GET CHATS (Eski faol chatlar ro'yxatini yuklash)
   useEffect(() => {
     const fetchChats = async () => {
       if (!currentUser?._id) return;
@@ -32,28 +32,53 @@ function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotific
     fetchChats();
   }, [currentUser?._id]);
 
-  // 2. OPTIMALLASHISH: Qidiruv va Saralashni useMemo-ga olamiz (Tezlikni 10x oshiradi)
-  const processedUsers = useMemo(() => {
-    // Aytaylik, foydalanuvchi qidirayotgan bo'lsa filter qilamiz
-    const filtered = users.filter((u) =>
-      u?.username?.toLowerCase().includes(search.toLowerCase())
-    );
+  // 2. GLOBAL SEARCH (Foydalanuvchilarni bazadan qidirish)
+  useEffect(() => {
+    const searchGlobalUsers = async () => {
+      if (!search.trim()) {
+        setSearchResults([]);
+        return;
+      }
+      try {
+        // Backend'dagi global qidiruv endpointiga so'rov yuboramiz
+        const { data } = await API.get(`/messages/search?query=${search}`);
+        
+        // Ro'yxatdan o'zimizni olib tashlaymiz
+        const filtered = data.filter((u) => u._id !== currentUser?._id);
+        setSearchResults(filtered);
+      } catch (error) {
+        console.error("GLOBAL SEARCH ERROR:", error);
+      }
+    };
 
-    // Xabarlar vaqtiga qarab saralash (Eng oxirgi yozgan odam tepaga chiqadi)
-    return [...filtered].sort((a, b) => {
+    // Render bepul serverini qiynamaslik uchun 400ms debounce (kutish) qo'shamiz
+    const delayDebounceFn = setTimeout(() => {
+      searchGlobalUsers();
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search, currentUser?._id]);
+
+  // 3. OPTIMALLASHISH: Qidiruv holatiga qarab foydalanuvchilarni ko'rsatish
+  const processedUsers = useMemo(() => {
+    // Agar qidiruv maydoni to'ldirilgan bo'lsa, global qidiruv natijasini ko'rsatamiz
+    if (search.trim()) {
+      return searchResults;
+    }
+
+    // Agar qidiruv bo'sh bo'lsa, eski chatlarni xabarlar vaqtiga qarab saralab ko'rsatamiz
+    return [...users].sort((a, b) => {
       const aTime = notifications?.[a?._id]?.time || 0;
       const bTime = notifications?.[b?._id]?.time || 0;
       return bTime - aTime;
     });
-  }, [users, search, notifications]);
+  }, [users, search, searchResults, notifications]);
 
-  // 3. OPTIMALLASHISH: Logout funksiyasini useCallback orqali xotirada saqlaymiz
   const logoutHandler = useCallback(() => {
     localStorage.removeItem("userInfo");
     window.location.href = "/login";
   }, []);
 
-  // CHATNI O'CHIRISH (Yashirish) FUNKSIYASI
   const deleteChatHandler = useCallback((e, userId) => {
     e.stopPropagation();
     const deletedChats = JSON.parse(localStorage.getItem("deletedChats")) || [];
@@ -110,7 +135,7 @@ function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotific
           <FiSearch className="text-slate-500 text-lg" />
           <input
             type="text"
-            placeholder="Chatlarni qidirish..."
+            placeholder="Global qidiruv (username yozing)..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="bg-transparent flex-1 outline-none text-sm text-white placeholder-slate-500"
@@ -120,6 +145,10 @@ function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotific
 
       {/* USERS / CHATS LIST */}
       <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-1 scrollbar-thin">
+        {processedUsers.length === 0 && search.trim() && (
+          <p className="text-center text-slate-500 text-sm py-4">Foydalanuvchi topilmadi</p>
+        )}
+        
         {processedUsers.map((u) => {
           const hasNotification = notifications?.[u._id]?.count > 0;
           const isSelected = selectedUser?._id === u._id;
@@ -162,17 +191,19 @@ function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotific
                 <h3 className={`font-semibold text-sm truncate ${isSelected ? "text-blue-400" : "text-slate-200"}`}>
                   {u?.username}
                 </h3>
-                <p className="text-xs text-slate-500 truncate mt-0.5">Suhbatni ochish...</p>
+                <p className="text-xs text-slate-500 truncate mt-0.5">
+                  {search.trim() ? "Yangi suhbat boshlash" : "Suhbatni ochish..."}
+                </p>
               </div>
 
-              {/* NOTIFICATION BADGE (Yangi daxshatli qo'shimcha!) */}
+              {/* NOTIFICATION BADGE */}
               {hasNotification && !isSelected && (
-                <div className="max-md:absolute max-md:top-2 max-md:right-2 min-w-[20px] h-5 px-1.5 rounded-full bg-blue-500 text-white text-[11px] font-bold flex items-center justify-center shadow-lg shadow-blue-500/20 animate-scale-in">
+                <div className="max-md:absolute max-md:top-2 max-md:right-2 min-w-[20px] h-5 px-1.5 rounded-full bg-blue-500 text-white text-[11px] font-bold flex items-center justify-center shadow-lg shadow-blue-500/20">
                   {notifications[u._id].count}
                 </div>
               )}
 
-              {/* TRASH / DELETE BUTTON (O'ng sichqoncha bosilganda chiqadi) */}
+              {/* TRASH / DELETE BUTTON */}
               {selectedChat?._id === u._id && (
                 <button
                   onClick={(e) => deleteChatHandler(e, u._id)}
