@@ -6,7 +6,7 @@ import ChatInput from "./ChatInput";
 import UserProfileModal from "./UserProfileModal";
 import TypingIndicator from "./TypingIndicator";
 import axios from "axios";
-import { FiArrowLeft, FiLogOut } from "react-icons/fi"; // FiLogOut ikonkasini qo'shdik
+import { FiArrowLeft, FiLogOut } from "react-icons/fi";
 
 function ChatArea({ selectedUser, setSelectedUser, notifications, setNotifications, messages, setMessages }) {
   const currentUser = JSON.parse(localStorage.getItem("userInfo"));
@@ -149,14 +149,14 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
     }
   };
 
-  // SEND VOICE
+  // SEND VOICE (Tuzatilgan qism: localhost olib tashlandi, umumiy API ulandi)
   const sendVoiceHandler = async (audioBlob) => {
     try {
       const formData = new FormData();
       formData.append("audio", audioBlob, "voice.webm");
 
-      const { data: uploadData } = await axios.post(
-        "http://localhost:5000/api/upload/voice",
+      const { data: uploadData } = await API.post(
+        "/upload/voice",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -190,10 +190,10 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
     return () => clearTimeout(timeout);
   }, [text]);
 
-  // EMPTY CHAT (Hech qaysi chat tanlanmagandagi asosiy ekran)
+  // EMPTY CHAT (📱 KLAS QO'SHILDI: max-md:hidden qo'shildi, mobil ekranda siqilishni oldini oladi)
   if (!selectedUser) {
     return (
-      <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-[#071018]">
+      <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-[#071018] max-md:hidden">
         <div className="absolute w-[500px] h-[500px] rounded-full bg-cyan-500/10 blur-[140px]" />
         <div className="relative z-10 text-center">
           <div className="w-28 h-28 rounded-[35px] bg-gradient-to-br from-blue-500 to-cyan-400 mx-auto flex items-center justify-center text-5xl font-black shadow-2xl shadow-cyan-500/30">
@@ -212,6 +212,7 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
 
   return (
     <>
+      {/* Asosiy chat maydoni */}
       <div className="flex-1 min-w-0 flex flex-col relative overflow-hidden bg-[#071018] text-white h-screen">
         
         {/* BACKGROUND GLOW */}
@@ -249,7 +250,7 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
             </div>
           </div>
 
-          {/* YANGI QO'SHILGAN O'NG TOMON: CHATDAN CHIQISH TUGMASI */}
+          {/* O'ng tomon: Chatdan chiqish tugmasi */}
           <button
             onClick={() => setSelectedUser(null)}
             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200 font-medium text-sm border border-red-500/10 active:scale-95 shadow-sm"
