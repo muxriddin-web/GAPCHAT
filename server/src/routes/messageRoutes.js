@@ -3,10 +3,14 @@ import {
   sendMessage,
   getMessages,
   getChats,
-  deleteMessage, // <-- Nomlanishi tepadagi controller bilan bir xil bo'lishi shart
+  deleteMessage,
+  searchUsers, // 1️⃣ Controllerdan qidiruv funksiyasini import qilamiz
 } from "../controllers/messageController.js";
 
 const router = express.Router();
+
+// 2️⃣ JUDA MUHIM: Qidiruv yo'lagini dinamik id li (:senderId) yo'laklardan TEPADA yozamiz!
+router.get("/search", searchUsers); 
 
 router.post("/", sendMessage);
 router.get("/chats/:userId", getChats); 

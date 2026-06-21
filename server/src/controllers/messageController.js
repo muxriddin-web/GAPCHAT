@@ -1,5 +1,5 @@
 import Message from "../models/Message.js";
-import User from "../models/User.js"; // <-- DIQQAT: Bu import shart edi!
+import User from "../models/User.js";
 
 // SEND MESSAGE
 export const sendMessage = async (req, res) => {
@@ -58,6 +58,28 @@ export const deleteMessage = async (req, res) => {
   try {
     await Message.findByIdAndDelete(req.params.id);
     res.json({ message: "Message deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ✅ YANGI QO'SHILGAN QIDIRUV FUNKSIYASI (GLOBAL SEARCH)
+export const searchUsers = async (req, res) => {
+  try {
+    // Frontenddan 'query' yoki 'search' bo'lib kelgan so'zni ushlaymiz
+    const keyword = req.query.query || req.query.search;
+
+    if (!keyword) {
+      return res.status(200).json([]);
+    }
+
+    // $regex yordamida ism ichida qidirilayotgan harflar borligini tekshiramiz
+    // $options: "i" -> Katta-kichik harflarni farqlamaydi (masalan: Asilbek va asilbek bir xil topiladi)
+    const users = await User.find({
+      username: { $regex: keyword, $options: "i" }
+    }).select("username profilePic isOnline"); // Faqat kerakli ma'lumotlarni yuboramiz, parolni yashiramiz
+
+    res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
