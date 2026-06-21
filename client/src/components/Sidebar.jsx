@@ -40,7 +40,7 @@ function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotific
         return;
       }
       try {
-        const { data } = await API.get(`/messages/search?query=${search}`);
+        const { data } = await API.get(`/messages/search?search=${search}`);
         const filtered = data.filter((u) => u._id !== currentUser?._id);
         setSearchResults(filtered);
       } catch (error) {
