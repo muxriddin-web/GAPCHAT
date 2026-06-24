@@ -1,215 +1,135 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
-import ProfileModal from "./ProfileModal";
-import { FiLogOut, FiSearch, FiTrash2 } from "react-icons/fi";
+import { useState, useEffect } from "react";
 import API from "../api/axios";
-import { useChat } from "../context/ChatContext";
+import { useChat } from "../context/ChatContext"; // 🚀 Global Context'ni ulaymiz
+import { FiSearch } from "react-icons/fi";
 
-function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotifications }) {
-  const [currentUser] = useState(() => JSON.parse(localStorage.getItem("userInfo")) || {});
+function Sidebar() {
+  // 🔥 Global context'dan kerakli statelarni olamiz
+  const { setSelectedUser, selectedUser, notifications, setNotifications } = useChat();
   
-  const [users, setUsers] = useState([]);
-  const [search, setSearch] = useState("");
+  const [chats, setChats] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [openProfile, setOpenProfile] = useState(false);
-  const [selectedChat, setSelectedChat] = useState(null);
+  const currentUser = JSON.parse(localStorage.getItem("userInfo"));
 
-  // ✅ GLOBAL CONTEXT LOGIC (sen so‘ragan qismga mos)
-  const handleSelectUser = useCallback((user) => {
-    setSelectedUser(user);
-
-    // notificationlarni tozalash (shu userga tegishli bo‘lsa)
-    setNotifications((prev) => {
-      const updated = { ...prev };
-      if (updated[user._id]) {
-        updated[user._id] = { count: 0, time: 0 };
-      }
-      return updated;
-    });
-  }, [setSelectedUser, setNotifications]);
-
-  // GET CHATS
+  // 1. AKTIV CHATLAR RO'YXATINI BAZADAN YUKLASH
   useEffect(() => {
+    if (!currentUser?._id) return;
+    
     const fetchChats = async () => {
-      if (!currentUser?._id) return;
       try {
         const { data } = await API.get(`/messages/chats/${currentUser._id}`);
-        const deletedChats = JSON.parse(localStorage.getItem("deletedChats")) || [];
-
-        const filtered = data.filter(
-          (u) => u._id !== currentUser?._id && !deletedChats.includes(u._id)
-        );
-        setUsers(filtered);
+        setChats(data);
       } catch (error) {
-        console.error("FETCH CHATS ERROR:", error);
+        console.error("Chatlarni yuklashda xatolik:", error);
       }
     };
 
     fetchChats();
-  }, [currentUser?._id]);
+  }, [currentUser?._id, selectedUser]); // Har safar chat o'zgarganda ro'yxat yangilanadi
 
-  // GLOBAL SEARCH
+  // 2. GLOBAL QIDIRUV MANTIQI (DEBOUNCE BILAN)
   useEffect(() => {
-    const searchGlobalUsers = async () => {
-      if (!search.trim()) {
-        setSearchResults([]);
-        return;
-      }
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const searchUsers = async () => {
       try {
-        const { data } = await API.get(`/messages/search?search=${search}`);
-        const filtered = data.filter((u) => u._id !== currentUser?._id);
-        setSearchResults(filtered);
+        const { data } = await API.get(`/messages/search?query=${searchQuery}`);
+        setSearchResults(data);
       } catch (error) {
-        console.error("GLOBAL SEARCH ERROR:", error);
+        console.error("Qidiruvda xatolik:", error);
       }
     };
 
-    const delayDebounceFn = setTimeout(() => {
-      searchGlobalUsers();
-    }, 400);
+    const delayDebounce = setTimeout(searchUsers, 400);
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [search, currentUser?._id]);
+  // 3. FOYDALANUVCHI BOSILGANDA ISHLAYDIGAN ASOSIY FUNKSIYA
+  const handleSelectUser = (user) => {
+    setSelectedUser(user); // 🚀 MATN SHU YERDA: Global holatni o'zgartiradi va ChatArea ochiladi!
+    setSearchQuery(""); // Qidiruv oynasini tozalaydi
+    setSearchResults([]);
 
-  const processedUsers = useMemo(() => {
-    if (search.trim()) return searchResults;
+    // Agar shu odamdan kelgan o'qilmagan xabarlar bo'lsa, ularni bildirishnomadan o'chiradi
+    setNotifications((prev) => prev.filter((n) => String(n.sender) !== String(user._id)));
+  };
 
-    return [...users].sort((a, b) => {
-      const aTime = notifications?.[a?._id]?.time || 0;
-      const bTime = notifications?.[b?._id]?.time || 0;
-      return bTime - aTime;
-    });
-  }, [users, search, searchResults, notifications]);
-
-  const logoutHandler = useCallback(() => {
-    localStorage.removeItem("userInfo");
-    window.location.href = "/login";
-  }, []);
-
-  const deleteChatHandler = useCallback((e, userId) => {
-    e.stopPropagation();
-
-    const deletedChats = JSON.parse(localStorage.getItem("deletedChats")) || [];
-    const updated = [...deletedChats, userId];
-
-    localStorage.setItem("deletedChats", JSON.stringify(updated));
-    setUsers((prev) => prev.filter((user) => user._id !== userId));
-
-    setSelectedUser(null);
-    setSelectedChat(null);
-  }, [setSelectedUser]);
+  // Qidiruv bo'sh bo'lsa eski chatlar, yozilgan bo'lsa qidiruv natijasi chiqadi
+  const displayUsers = searchQuery.trim() ? searchResults : chats;
 
   return (
-    <div className={`w-full md:w-[360px] md:shrink-0 glass border-r border-white/5 flex flex-col h-screen bg-[#0e1621]/90 backdrop-blur-xl ${
-      selectedUser ? "max-md:hidden" : "flex"
-    }`}>
-
-      {/* LOGO */}
-      <div className="h-[90px] px-6 flex items-center justify-between border-b border-white/5 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-2xl font-black shadow-lg shadow-cyan-500/20 select-none">
-            N
-          </div>
-          <div>
-            <h1 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300">
-              NexChat
-            </h1>
-            <p className="text-xs text-slate-500">Modern Messenger</p>
-          </div>
-        </div>
-      </div>
-
-      {/* PROFILE */}
-      <div
-        onClick={() => setOpenProfile(true)}
-        className="p-4 mx-2 my-2 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-white/5 transition"
-      >
-        <img
-          src={currentUser?.profilePic || "https://i.imgur.com/HeIi0wU.png"}
-          className="w-12 h-12 rounded-2xl object-cover"
-        />
-        <div className="min-w-0">
-          <h2 className="font-bold text-slate-200 truncate">
-            {currentUser?.username || "Foydalanuvchi"}
-          </h2>
-          <p className="text-xs text-green-400">Onlayn</p>
-        </div>
-      </div>
-
-      {/* SEARCH */}
-      <div className="p-3">
-        <div className="flex items-center gap-3 bg-[#17212b]/60 rounded-xl px-4 h-[48px]">
-          <FiSearch className="text-slate-500" />
+    <div className="w-full h-full bg-[#0e1621] flex flex-col text-white">
+      {/* QIDIRUV PANEL (SEARCH) */}
+      <div className="p-4 border-b border-white/5 bg-[#0e1621]">
+        <div className="relative">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-lg" />
           <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Global qidiruv..."
-            className="bg-transparent flex-1 outline-none text-white"
+            type="text"
+            placeholder="Qidirish..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-10 pl-10 pr-4 rounded-xl bg-[#17212b] border border-transparent focus:border-blue-500/50 outline-none text-sm transition placeholder:text-white/30"
           />
         </div>
       </div>
 
-      {/* USERS */}
-      <div className="flex-1 overflow-y-auto px-2 space-y-1">
-        {processedUsers.map((u) => {
-          const hasNotification = notifications?.[u._id]?.count > 0;
-          const isSelected = selectedUser?._id === u._id;
+      {/* CHATLAR VA FOYDALANUVCHILAR RO'YXATI */}
+      <div className="flex-1 overflow-y-auto divide-y divide-white/[0.02] scrollbar-thin">
+        {displayUsers.length === 0 ? (
+          <div className="p-6 text-center text-white/30 text-sm">
+            {searchQuery.trim() ? "Foydalanuvchi topilmadi" : "Hech qanday chat mavjud emas"}
+          </div>
+        ) : (
+          displayUsers.map((user) => {
+            // Hozirgi tanlangan chatni aniqlash (Dizaynini o'zgartirish uchun)
+            const isSelected = selectedUser?._id === user._id;
+            
+            // Shu foydalanuvchidan yangi xabar bormi yoki yo'qligini tekshirish
+            const hasNotification = notifications.some((n) => String(n.sender) === String(user._id));
 
-          return (
-            <div
-              key={u._id}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                setSelectedChat(selectedChat?._id === u._id ? null : u);
-              }}
-              onClick={() => handleSelectUser(u)}   // ✅ YANGI LOGIC
-              className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer ${
-                isSelected ? "bg-blue-500/10" : "hover:bg-white/5"
-              }`}
-            >
-              <img
-                src={u.profilePic || "https://i.imgur.com/HeIi0wU.png"}
-                className="w-12 h-12 rounded-xl"
-              />
-
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-white truncate">
-                  {u.username}
-                </h3>
-              </div>
-
-              {hasNotification && !isSelected && (
-                <div className="bg-blue-500 text-white text-xs px-2 rounded-full">
-                  {notifications[u._id].count}
+            return (
+              <div
+                key={user._id}
+                onClick={() => handleSelectUser(user)}
+                className={`flex items-center gap-4 p-4 cursor-pointer transition-all duration-150 relative ${
+                  isSelected ? "bg-[#2b5278]" : "hover:bg-[#17212b]"
+                }`}
+              >
+                {/* PROFIL RASMI VA ONLAYN STATUS */}
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={user.profilePic || "https://i.imgur.com/HeIi0wU.png"}
+                    alt={user.username}
+                    className="w-12 h-12 rounded-2xl object-cover border border-white/10"
+                  />
+                  {user.isOnline && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-[#0e1621]" />
+                  )}
                 </div>
-              )}
 
-              {selectedChat?._id === u._id && (
-                <button
-                  onClick={(e) => deleteChatHandler(e, u._id)}
-                  className="absolute right-3 text-red-400"
-                >
-                  <FiTrash2 />
-                </button>
-              )}
-            </div>
-          );
-        })}
+                {/* FOYDALANUVCHI NOMI VA BILDIRISHNOMA */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm truncate text-white">{user.username}</h3>
+                    
+                    {/* Yangi xabar kelganda yonib-o'chuvchi ko'k nuqta */}
+                    {hasNotification && (
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse shadow-sm shadow-blue-500" />
+                    )}
+                  </div>
+                  <p className="text-xs text-white/40 truncate mt-0.5">
+                    {user.isOnline ? "onlayn" : "oflayn"}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
-
-      {/* LOGOUT */}
-      <div className="p-3 border-t border-white/5">
-        <button
-          onClick={logoutHandler}
-          className="w-full h-[48px] bg-red-500/10 text-red-400 rounded-xl"
-        >
-          <FiLogOut className="inline mr-2" />
-          Chiqish
-        </button>
-      </div>
-
-      {openProfile && (
-        <ProfileModal open={openProfile} setOpen={setOpenProfile} />
-      )}
     </div>
   );
 }
