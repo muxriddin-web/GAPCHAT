@@ -99,9 +99,17 @@ function ChatArea() {
   };
 
   // 3. SEND IMAGE (ImgBB)
+ // 3. SEND IMAGE (ImgBB) - Xatolikni aniqlovchi yangilangan funksiya
   const sendImageHandler = async (e) => {
     const file = e.target.files[0];
     if (!file || isSendingRef.current || !selectedUser?._id) return;
+
+    // API kalit borligini tekshirish
+    const apiKey = import.meta.env.VITE_IMGBB_KEY;
+    if (!apiKey) {
+      alert("Xatolik: ImgBB API kaliti (VITE_IMGBB_KEY) topilmadi! Netlify panelida o'zgaruvchi kiritilmagan.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("image", file);
@@ -109,7 +117,7 @@ function ChatArea() {
     try {
       isSendingRef.current = true;
       const { data: imageData } = await axios.post(
-        `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_KEY}`,
+        `https://api.imgbb.com/1/upload?key=${apiKey}`,
         formData
       );
 
@@ -127,6 +135,8 @@ function ChatArea() {
       });
     } catch (error) {
       console.error("Rasm yuklashda xatolik:", error);
+      // Telefonda xatolik sababini ko'rsatish uchun:
+      alert("Rasm yuklanmadi. Sababi: " + (error.response?.data?.error?.message || error.message));
     } finally {
       isSendingRef.current = false;
     }

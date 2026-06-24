@@ -87,35 +87,37 @@ function Sidebar() {
   }, [setSelectedUser]);
 
   return (
-    /* 📱 MOBIL UCHUN SEHRLI KLAS: Agar chat tanlangan bo'lsa mobil ekranda yashirinadi (max-md:hidden), tanlanmagan bo'lsa to'liq ekran bo'ladi (w-full) */
-    <div className={`w-full md:w-[360px] md:shrink-0 glass border-r border-white/5 flex flex-col h-screen bg-[#0e1621]/90 backdrop-blur-xl ${
+    /* 📱 MOBIL UCHUN SEHRLI KLAS: 'h-screen' o'rniga 'h-[100dvh]' qo'yildi, bu mobil brauzerlardagi siqilishni butunlay yo'qotadi */
+    <div className={`w-full md:w-[360px] md:shrink-0 glass border-r border-white/5 flex flex-col h-[100dvh] bg-[#0e1621]/90 backdrop-blur-xl ${
       selectedUser ? "max-md:hidden" : "flex"
     }`}>
       
       {/* LOGO */}
-      <div className="h-[90px] px-6 flex items-center justify-between border-b border-white/5 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-2xl font-black shadow-lg shadow-cyan-500/20 select-none">
+      {/* 🚀 shrink-0 va items-center orqali logo dizayni qat'iy simmetrik holatga keltirildi */}
+      <div className="h-[80px] px-6 flex items-center justify-between border-b border-white/5 shrink-0 select-none">
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-xl font-black shadow-lg shadow-cyan-500/20 shrink-0">
             N
           </div>
-          <div className="select-none">
-            <h1 className="text-xl font-black tracking-wide bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+          <div className="shrink-0">
+            <h1 className="text-lg font-black tracking-wide bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
               NexChat
             </h1>
-            <p className="text-xs text-slate-500 font-medium">Modern Messenger</p>
+            <p className="text-[11px] text-slate-500 font-medium -mt-0.5">Modern Messenger</p>
           </div>
         </div>
       </div>
 
       {/* PROFILE CARD */}
+      {/* 🚀 'flex-shrink-0' qo'shildi, endi u mutlaqo yuqoriga siqilib ketmaydi */}
       <div
         onClick={() => setOpenProfile(true)}
-        className="p-4 mx-2 my-2 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-white/5 transition duration-200 select-none group"
+        className="p-4 mx-2 mt-3 mb-1 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-white/5 transition duration-200 select-none group flex-shrink-0 bg-[#17212b]/20 border border-white/[0.02]"
       >
         <img
           src={currentUser?.profilePic || "https://i.imgur.com/HeIi0wU.png"}
           alt=""
-          className="w-12 h-12 md:w-13 md:h-13 rounded-2xl object-cover border border-white/10 group-hover:scale-105 transition"
+          className="w-12 h-12 md:w-13 md:h-13 rounded-2xl object-cover border border-white/10 group-hover:scale-105 transition flex-shrink-0"
         />
         <div className="flex-1 min-w-0">
           <h2 className="font-bold text-base text-slate-200 truncate">
@@ -142,7 +144,8 @@ function Sidebar() {
       </div>
 
       {/* USERS / CHATS LIST */}
-      <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-1 scrollbar-thin">
+      {/* 🚀 'space-y-1' o'rniga 'space-y-2.5' qilinganidan so'ng chatlar orasida ideal masofa paydo bo'ldi */}
+      <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-2.5 scrollbar-thin">
         {processedUsers.length === 0 && search.trim() && (
           <p className="text-center text-slate-500 text-sm py-4">Foydalanuvchi topilmadi</p>
         )}
@@ -167,7 +170,7 @@ function Sidebar() {
                   }));
                 }
               }}
-              className={`group relative flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 border select-none
+              className={`group relative flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 border select-none shrink-0
                 ${isSelected
                   ? "bg-gradient-to-r from-blue-500/15 to-cyan-400/5 border-blue-500/20 shadow-md"
                   : "border-transparent hover:bg-white/5"
@@ -179,7 +182,7 @@ function Sidebar() {
                 <img
                   src={u?.profilePic || "https://i.imgur.com/HeIi0wU.png"}
                   alt=""
-                  className="w-12 h-12 md:w-13 md:h-13 rounded-xl object-cover"
+                  className="w-12 h-12 md:w-13 md:h-13 rounded-xl object-cover shrink-0"
                 />
                 <div className="absolute bottom-[-1px] right-[-1px] w-3.5 h-3.5 rounded-full bg-green-400 border-2 border-[#0e1621]" />
               </div>
@@ -196,7 +199,7 @@ function Sidebar() {
 
               {/* NOTIFICATION BADGE */}
               {hasNotification && !isSelected && (
-                <div className="min-w-[20px] h-5 px-1.5 rounded-full bg-blue-500 text-white text-[11px] font-bold flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <div className="min-w-[20px] h-5 px-1.5 rounded-full bg-blue-500 text-white text-[11px] font-bold flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
                   {notifications[u._id].count}
                 </div>
               )}
