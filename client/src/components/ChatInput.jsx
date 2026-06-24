@@ -8,23 +8,17 @@ import {
 } from "react-icons/fi";
 import EmojiPicker from "emoji-picker-react";
 
-const STICKERS = [
-  "😀", "😂", "😍", "🥰", "😎", "🤔",
-  "😢", "😭", "😡", "😴", "👍", "👏",
-  "🔥", "❤️", "💯", "🎉", "🚀", "🤝",
-];
-
 function ChatInput({
   text,
   setText,
   sendMessageHandler,
   sendImageHandler,
-  sendStickerHandler,
+  sendStickerHandler, // Prop xatolik bermasligi uchun qoldirildi
   sendVoiceHandler,
 }) {
   const [recording, setRecording] = useState(false);
   const [showStickers, setShowStickers] = useState(false);
-    
+      
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const streamRef = useRef(null);
@@ -81,33 +75,18 @@ function ChatInput({
     <div className="p-2 md:p-4 relative w-full box-border">
       <div className="rounded-xl p-2 border border-white/5 bg-[#0e1621]">
         
-        {/* EMOJI PICKER PANEL */}
+        {/* 🚀 EMOJI PICKER PANEL: Tepadagi ortiqcha STICKERS bloki olib tashlandi */}
         {showStickers && (
-          <div className="absolute bottom-[100%] left-2 right-2 mb-2 flex flex-col gap-2 bg-[#111c29] p-2 rounded-2xl border border-white/10 shadow-2xl z-50">
-            <div className="grid grid-cols-6 sm:grid-cols-9 gap-1.5 max-h-[90px] overflow-y-auto mb-2 border-b border-white/5 pb-2 scrollbar-none">
-              {STICKERS.map((sticker) => (
-                <button
-                  key={sticker}
-                  type="button"
-                  onClick={() => {
-                    sendStickerHandler(sticker);
-                    setShowStickers(false);
-                  }}
-                  className="w-9 h-9 flex items-center justify-center text-xl rounded-xl hover:bg-[#1f2d3d] transition active:scale-95"
-                >
-                  {sticker}
-                </button>
-              ))}
-            </div>
-            
+          <div className="absolute bottom-[100%] left-2 right-2 mb-2 flex flex-col bg-[#111c29] p-2 rounded-2xl border border-white/10 shadow-2xl z-50 animate-fade-in">
             <div className="overflow-hidden rounded-xl">
               <EmojiPicker
                 theme="dark"
                 width="100%"
-                height={240}
+                height={260} // Balandligi biroz moslashtirildi
                 lazyLoadEmojis={true}
                 skinTonesDisabled={true}
                 searchDisabled={false}
+                suggestedEmojisMode="none" // Kutubxonaning ichki tavsiyalarini ham o'chiradi
                 onEmojiClick={(emojiData) => {
                   setText((prev) => prev + emojiData.emoji);
                 }}
