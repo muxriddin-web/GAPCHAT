@@ -1,50 +1,55 @@
-// import { io } from "socket.io-client";
-
-// const currentUser = JSON.parse(localStorage.getItem("userInfo")) || {};
-// const userId = currentUser?._id;
-
-// const socket = io("http://localhost:5000", {
-//   autoConnect: true,
-//   transports: ["websocket"], // <-- Faqat websocket ishlashini majburlaymiz
-//   query: { userId: userId || "" },
-// });
-
-// export default socket;
-
-
-
-
-
 import { io } from "socket.io-client";
 
-// 1. HOSTING UCHUN URL DINAMIKLASHTIRISH
-// Loyihani Render/VPS-ga qo'yganingizda .env faylidagi VITE_BACKEND_URL ni o'qiydi.
-// Agar u topilmasa (mahalliy kompyuterda) localhost:5000 da ishlayveradi.
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://gapchat.onrender.com";
 
-const currentUser = JSON.parse(localStorage.getItem("userInfo")) || {};
-const userId = currentUser?._id;
+const getFreshUserId = () => {
+  try {
+    const currentUser = JSON.parse(localStorage.getItem("userInfo"));
+    return currentUser?._id || "";
+  } catch (e) {
+    return "";
+  }
+};
 
-// 2. SOCKET INSTANSIYASINI OPTIMALLASHTIRISH
 const socket = io(BACKEND_URL, {
   autoConnect: true,
-  transports: ["websocket"], // WebSocket majburlash (HTTP polling'ga vaqt ketkazmaydi)
-  query: { userId: userId || "" },
-  
-  // Production barqarorlik sozlamalari:
-  reconnection: true,            // Internet uzilsa avtomatik qayta ulanish
-  reconnectionAttempts: 10,      // Server o'chib yonsa, ketma-ket 10 marta ulanishga urinadi
-  reconnectionDelay: 2000,       // Har bir urinish orasida 2 soniya kutadi (serverni charchatmaydi)
-  timeout: 10000,                // 10 soniyada javob bo'lmasa ulanishni uzib qayta urinadi
+  transports: ["websocket"],
+  query: { userId: getFreshUserId() },
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 2000,
+  timeout: 30000,
 });
 
-// 3. DINAMIK USER ID YANGILASH (Lifehack)
-// Foydalanuvchi yangi login qilganida socket ulanishini eng oxirgi ID bilan yangilash mexanizmi
-socket.on("connect_error", () => {
-  const freshUser = JSON.parse(localStorage.getItem("userInfo"));
-  if (freshUser?._id) {
-    socket.io.opts.query = { userId: freshUser._id };
+socket.on("connect", () => {
+  const currentId = getFreshUserId();
+  console.log("[Socket] Ulandi. socketId:", socket.id, "| userId:", currentId);
+  if (currentId) {
+    socket.emit("addUser", currentId);
   }
 });
+
+socket.on("connect_error", (err) => {
+  console.error("[Socket] Ulanish xatosi:", err.message);
+});
+
+socket.on("disconnect", (reason) => {
+  console.log("[Socket] Uzildi:", reason);
+});
+
+socket.on("reconnect_attempt", (attempt) => {
+  console.log("[Socket] Qayta ulanish urinishi:", attempt);
+  socket.io.opts.query = { userId: getFreshUserId() };
+});
+
+export const refreshSocketConnection = () => {
+  const currentId = getFreshUserId();
+  socket.io.opts.query = { userId: currentId };
+  if (socket.connected) {
+    socket.emit("addUser", currentId);
+  } else {
+    socket.connect();
+  }
+};
 
 export default socket;

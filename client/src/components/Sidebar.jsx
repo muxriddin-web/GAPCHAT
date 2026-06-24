@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import ProfileModal from "./ProfileModal";
 import { FiLogOut, FiSearch, FiTrash2 } from "react-icons/fi";
 import API from "../api/axios";
+import { useChat } from "../context/ChatContext";
 
 function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotifications }) {
   const [currentUser] = useState(() => JSON.parse(localStorage.getItem("userInfo")) || {});
@@ -11,6 +12,20 @@ function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotific
   const [searchResults, setSearchResults] = useState([]);
   const [openProfile, setOpenProfile] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
+
+  // ✅ GLOBAL CONTEXT LOGIC (sen so‘ragan qismga mos)
+  const handleSelectUser = useCallback((user) => {
+    setSelectedUser(user);
+
+    // notificationlarni tozalash (shu userga tegishli bo‘lsa)
+    setNotifications((prev) => {
+      const updated = { ...prev };
+      if (updated[user._id]) {
+        updated[user._id] = { count: 0, time: 0 };
+      }
+      return updated;
+    });
+  }, [setSelectedUser, setNotifications]);
 
   // GET CHATS
   useEffect(() => {
@@ -56,9 +71,8 @@ function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotific
   }, [search, currentUser?._id]);
 
   const processedUsers = useMemo(() => {
-    if (search.trim()) {
-      return searchResults;
-    }
+    if (search.trim()) return searchResults;
+
     return [...users].sort((a, b) => {
       const aTime = notifications?.[a?._id]?.time || 0;
       const bTime = notifications?.[b?._id]?.time || 0;
@@ -73,77 +87,69 @@ function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotific
 
   const deleteChatHandler = useCallback((e, userId) => {
     e.stopPropagation();
+
     const deletedChats = JSON.parse(localStorage.getItem("deletedChats")) || [];
     const updated = [...deletedChats, userId];
 
     localStorage.setItem("deletedChats", JSON.stringify(updated));
     setUsers((prev) => prev.filter((user) => user._id !== userId));
-    
+
     setSelectedUser(null);
     setSelectedChat(null);
   }, [setSelectedUser]);
 
   return (
-    /* 📱 MOBIL UCHUN SEHRLI KLAS: Agar chat tanlangan bo'lsa mobil ekranda yashirinadi (max-md:hidden), tanlanmagan bo'lsa to'liq ekran bo'ladi (w-full) */
     <div className={`w-full md:w-[360px] md:shrink-0 glass border-r border-white/5 flex flex-col h-screen bg-[#0e1621]/90 backdrop-blur-xl ${
       selectedUser ? "max-md:hidden" : "flex"
     }`}>
-      
+
       {/* LOGO */}
       <div className="h-[90px] px-6 flex items-center justify-between border-b border-white/5 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-2xl font-black shadow-lg shadow-cyan-500/20 select-none">
             N
           </div>
-          <div className="select-none">
-            <h1 className="text-xl font-black tracking-wide bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+          <div>
+            <h1 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300">
               NexChat
             </h1>
-            <p className="text-xs text-slate-500 font-medium">Modern Messenger</p>
+            <p className="text-xs text-slate-500">Modern Messenger</p>
           </div>
         </div>
       </div>
 
-      {/* PROFILE CARD */}
+      {/* PROFILE */}
       <div
         onClick={() => setOpenProfile(true)}
-        className="p-4 mx-2 my-2 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-white/5 transition duration-200 select-none group"
+        className="p-4 mx-2 my-2 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-white/5 transition"
       >
         <img
           src={currentUser?.profilePic || "https://i.imgur.com/HeIi0wU.png"}
-          alt=""
-          className="w-12 h-12 md:w-13 md:h-13 rounded-2xl object-cover border border-white/10 group-hover:scale-105 transition"
+          className="w-12 h-12 rounded-2xl object-cover"
         />
-        <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-base text-slate-200 truncate">
+        <div className="min-w-0">
+          <h2 className="font-bold text-slate-200 truncate">
             {currentUser?.username || "Foydalanuvchi"}
           </h2>
-          <p className="text-xs text-green-400 flex items-center gap-1 mt-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Onlayn
-          </p>
+          <p className="text-xs text-green-400">Onlayn</p>
         </div>
       </div>
 
-      {/* SEARCH INPUT */}
-      <div className="p-3 shrink-0">
-        <div className="h-[48px] bg-[#17212b]/60 focus-within:border-blue-500/50 rounded-xl px-4 flex items-center gap-3 border border-white/5 transition">
-          <FiSearch className="text-slate-500 text-lg" />
+      {/* SEARCH */}
+      <div className="p-3">
+        <div className="flex items-center gap-3 bg-[#17212b]/60 rounded-xl px-4 h-[48px]">
+          <FiSearch className="text-slate-500" />
           <input
-            type="text"
-            placeholder="Global qidiruv (username yozing)..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent flex-1 outline-none text-sm text-white placeholder-slate-500"
+            placeholder="Global qidiruv..."
+            className="bg-transparent flex-1 outline-none text-white"
           />
         </div>
       </div>
 
-      {/* USERS / CHATS LIST */}
-      <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-1 scrollbar-thin">
-        {processedUsers.length === 0 && search.trim() && (
-          <p className="text-center text-slate-500 text-sm py-4">Foydalanuvchi topilmadi</p>
-        )}
-        
+      {/* USERS */}
+      <div className="flex-1 overflow-y-auto px-2 space-y-1">
         {processedUsers.map((u) => {
           const hasNotification = notifications?.[u._id]?.count > 0;
           const isSelected = selectedUser?._id === u._id;
@@ -155,57 +161,34 @@ function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotific
                 e.preventDefault();
                 setSelectedChat(selectedChat?._id === u._id ? null : u);
               }}
-              onClick={() => {
-                setSelectedUser(u);
-                if (hasNotification) {
-                  setNotifications((prev) => ({
-                    ...prev,
-                    [u._id]: { count: 0, time: 0 },
-                  }));
-                }
-              }}
-              className={`group relative flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 border select-none
-                ${isSelected
-                  ? "bg-gradient-to-r from-blue-500/15 to-cyan-400/5 border-blue-500/20 shadow-md"
-                  : "border-transparent hover:bg-white/5"
-                }
-              `}
+              onClick={() => handleSelectUser(u)}   // ✅ YANGI LOGIC
+              className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer ${
+                isSelected ? "bg-blue-500/10" : "hover:bg-white/5"
+              }`}
             >
-              {/* AVATAR & STATUS */}
-              <div className="relative shrink-0">
-                <img
-                  src={u?.profilePic || "https://i.imgur.com/HeIi0wU.png"}
-                  alt=""
-                  className="w-12 h-12 md:w-13 md:h-13 rounded-xl object-cover"
-                />
-                <div className="absolute bottom-[-1px] right-[-1px] w-3.5 h-3.5 rounded-full bg-green-400 border-2 border-[#0e1621]" />
-              </div>
+              <img
+                src={u.profilePic || "https://i.imgur.com/HeIi0wU.png"}
+                className="w-12 h-12 rounded-xl"
+              />
 
-              {/* USER INFO */}
-              <div className="flex-1 min-w-0">
-                <h3 className={`font-semibold text-sm truncate ${isSelected ? "text-blue-400" : "text-slate-200"}`}>
-                  {u?.username}
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-white truncate">
+                  {u.username}
                 </h3>
-                <p className="text-xs text-slate-500 truncate mt-0.5">
-                  {search.trim() ? "Yangi suhbat boshlash" : "Suhbatni ochish..."}
-                </p>
               </div>
 
-              {/* NOTIFICATION BADGE */}
               {hasNotification && !isSelected && (
-                <div className="min-w-[20px] h-5 px-1.5 rounded-full bg-blue-500 text-white text-[11px] font-bold flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <div className="bg-blue-500 text-white text-xs px-2 rounded-full">
                   {notifications[u._id].count}
                 </div>
               )}
 
-              {/* TRASH / DELETE BUTTON */}
               {selectedChat?._id === u._id && (
                 <button
                   onClick={(e) => deleteChatHandler(e, u._id)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition active:scale-95 shadow-md shadow-red-500/20 z-10"
-                  title="Chatni o'chirish"
+                  className="absolute right-3 text-red-400"
                 >
-                  <FiTrash2 className="text-sm" />
+                  <FiTrash2 />
                 </button>
               )}
             </div>
@@ -213,23 +196,19 @@ function Sidebar({ selectedUser, setSelectedUser, notifications = {}, setNotific
         })}
       </div>
 
-      {/* LOGOUT BUTTON */}
-      <div className="p-3 shrink-0 border-t border-white/5">
+      {/* LOGOUT */}
+      <div className="p-3 border-t border-white/5">
         <button
           onClick={logoutHandler}
-          className="w-full h-[48px] rounded-xl bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/10 transition-all duration-200 flex items-center justify-center gap-2 text-red-400 font-semibold text-sm active:scale-95"
+          className="w-full h-[48px] bg-red-500/10 text-red-400 rounded-xl"
         >
-          <FiLogOut className="text-base" />
-          <span>Chiqish</span>
+          <FiLogOut className="inline mr-2" />
+          Chiqish
         </button>
       </div>
 
-      {/* PROFILE MODAL */}
       {openProfile && (
-        <ProfileModal
-          open={openProfile}
-          setOpen={setOpenProfile}
-        />
+        <ProfileModal open={openProfile} setOpen={setOpenProfile} />
       )}
     </div>
   );

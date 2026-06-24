@@ -1,15 +1,33 @@
 import Message from "../models/Message.js";
 import User from "../models/User.js";
+import { getAllReceiverSocketIds, getIO } from "../socket/socket.js";
 
 // SEND MESSAGE
+// server/controllers/messageControllers.js
+
 export const sendMessage = async (req, res) => {
   try {
+    const { receiver } = req.body;
+    
+    // 1. Bazaga saqlash
     const message = await Message.create(req.body);
+
+    // 2. Global Express'dan io-ni olamiz
+    const io = req.app.get("io");
+    
+    if (io) {
+      // 🔥 Qabul qiluvchining shaxsiy ID-Xonasiga xabarni otamiz
+      io.to(receiver).emit("receiveMessage", message);
+      console.log(`Xabar ${receiver} xonasiga muvaffaqiyatli yuborildi.`);
+    }
+
     res.status(201).json(message);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+// getMessages va boshqa funksiyalar o'zgarishsiz qoladi...
 
 // GET MESSAGES
 export const getMessages = async (req, res) => {
@@ -31,22 +49,23 @@ export const getMessages = async (req, res) => {
 export const getChats = async (req, res) => {
   try {
     const userId = req.params.userId;
-
     const messages = await Message.find({
       $or: [{ sender: userId }, { receiver: userId }],
     }).sort({ createdAt: -1 });
 
     const userMap = {};
     messages.forEach((msg) => {
-      const otherUser = msg.sender.toString() === userId ? msg.receiver.toString() : msg.sender.toString();
+      const otherUser =
+        msg.sender.toString() === userId
+          ? msg.receiver.toString()
+          : msg.sender.toString();
       userMap[otherUser] = true;
     });
 
     const chatUserIds = Object.keys(userMap);
-
-    const chatUsers = await User.find({ _id: { $in: chatUserIds } })
-      .select("username profilePic isOnline");
-
+    const chatUsers = await User.find({ _id: { $in: chatUserIds } }).select(
+      "username profilePic isOnline"
+    );
     res.json(chatUsers);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -63,21 +82,15 @@ export const deleteMessage = async (req, res) => {
   }
 };
 
-// ✅ YANGI QO'SHILGAN QIDIRUV FUNKSIYASI (GLOBAL SEARCH)
+// SEARCH USERS
 export const searchUsers = async (req, res) => {
   try {
-    // Frontenddan 'query' yoki 'search' bo'lib kelgan so'zni ushlaymiz
     const keyword = req.query.query || req.query.search;
+    if (!keyword) return res.status(200).json([]);
 
-    if (!keyword) {
-      return res.status(200).json([]);
-    }
-
-    // $regex yordamida ism ichida qidirilayotgan harflar borligini tekshiramiz
-    // $options: "i" -> Katta-kichik harflarni farqlamaydi (masalan: Asilbek va asilbek bir xil topiladi)
     const users = await User.find({
-      username: { $regex: keyword, $options: "i" }
-    }).select("username profilePic isOnline"); // Faqat kerakli ma'lumotlarni yuboramiz, parolni yashiramiz
+      username: { $regex: keyword, $options: "i" },
+    }).select("username profilePic isOnline");
 
     res.status(200).json(users);
   } catch (error) {

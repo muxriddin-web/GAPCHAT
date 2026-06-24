@@ -27,13 +27,13 @@ function ChatInput({
     
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const streamRef = useRef(null); // Brauzer mikrofon chirog'ini o'chirish uchun ref
+  const streamRef = useRef(null);
 
   // START RECORD
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream; // Streamni saqlaymiz
+      streamRef.current = stream;
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -48,7 +48,6 @@ function ChatInput({
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         sendVoiceHandler(audioBlob);
         
-        // Mikrofondan foydalanishni to'liq to'xtatish (Brauzerdagi qizil belgi o'chadi)
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
           streamRef.current = null;
@@ -70,47 +69,47 @@ function ChatInput({
     }
   };
 
-  // FORM SUBMIT (Enter bosganda yoki mobile klaviaturada yuborish silliq ishlashi uchun)
+  // FORM SUBMIT
   const handleSubmit = (e) => {
     e.preventDefault();
-    sendMessageHandler();
+    if (text.trim()) {
+      sendMessageHandler();
+    }
   };
 
   return (
-    <div className="p-4 md:p-5 relative">
-      <div className="rounded-xl p-3 border border-white/5 bg-[#0e1621]">
+    <div className="p-2 md:p-4 relative w-full box-border">
+      <div className="rounded-xl p-2 border border-white/5 bg-[#0e1621]">
         
-        {/* EMOJI PICKER VA STIKERLAR PANELI (Ekranni surib yubormasligi uchun absolute qilindi) */}
+        {/* EMOJI PICKER PANEL */}
         {showStickers && (
-          <div className="absolute bottom-[100%] left-4 right-4 mb-3 flex flex-col gap-2 bg-[#111c29] p-3 rounded-2xl border border-white/10 shadow-2xl z-50 transition-all">
-            {/* Tezkor Stikerlar (Bosilganda srazi xabar bo'lib ketadi) */}
-            <div className="grid grid-cols-6 sm:grid-cols-9 gap-2 max-h-[100px] overflow-y-auto mb-2 border-b border-white/5 pb-2 scrollbar-none">
+          <div className="absolute bottom-[100%] left-2 right-2 mb-2 flex flex-col gap-2 bg-[#111c29] p-2 rounded-2xl border border-white/10 shadow-2xl z-50">
+            <div className="grid grid-cols-6 sm:grid-cols-9 gap-1.5 max-h-[90px] overflow-y-auto mb-2 border-b border-white/5 pb-2 scrollbar-none">
               {STICKERS.map((sticker) => (
                 <button
                   key={sticker}
                   type="button"
                   onClick={() => {
-                    sendStickerHandler(sticker); // To'g'ridan-to'g'ri stiker xabar yuborish
+                    sendStickerHandler(sticker);
                     setShowStickers(false);
                   }}
-                  className="w-10 h-10 flex items-center justify-center text-2xl rounded-xl hover:bg-[#1f2d3d] hover:scale-110 transition active:scale-95"
+                  className="w-9 h-9 flex items-center justify-center text-xl rounded-xl hover:bg-[#1f2d3d] transition active:scale-95"
                 >
                   {sticker}
                 </button>
               ))}
             </div>
             
-            {/* To'liq Emoji Picker (Yozish jarayonida qotmasligi uchun optimallashtirildi) */}
             <div className="overflow-hidden rounded-xl">
               <EmojiPicker
                 theme="dark"
                 width="100%"
-                height={280}
+                height={240}
                 lazyLoadEmojis={true}
                 skinTonesDisabled={true}
                 searchDisabled={false}
                 onEmojiClick={(emojiData) => {
-                  setText((prev) => prev + emojiData.emoji); // Matnga qo'shadi, panel yopilmaydi
+                  setText((prev) => prev + emojiData.emoji);
                 }}
               />
             </div>
@@ -119,83 +118,80 @@ function ChatInput({
 
         {/* RECORDING STATUS */}
         {recording && (
-          <div className="text-red-400 text-sm mb-2 flex items-center gap-2 px-1 animate-pulse">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+          <div className="text-red-400 text-xs mb-2 flex items-center gap-2 px-1 animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
             🎤 Ovoz yozilmoqda...
           </div>
         )}
 
         {/* INPUT INTERFACE */}
-        <form onSubmit={handleSubmit} className="flex items-center gap-2 md:gap-3">
+        <form onSubmit={handleSubmit} className="flex items-center gap-1.5 w-full">
 
-          {/* RASM YUKLASH TUGMASI */}
-          <label className="w-11 h-11 md:w-13 md:h-13 rounded-xl bg-[#17212b] text-slate-400 hover:text-white flex items-center justify-center cursor-pointer hover:bg-[#223040] transition active:scale-95 select-none">
-            <FiImage className="text-xl" />
+          {/* RASM TUGMASI */}
+          <label className="w-10 h-10 flex-shrink-0 rounded-xl bg-[#17212b] text-slate-400 flex items-center justify-center cursor-pointer hover:bg-[#223040] transition active:scale-95">
+            <FiImage className="text-lg" />
             <input
               type="file"
               accept="image/*"
               hidden
               onChange={(e) => {
                 sendImageHandler(e);
-                e.target.value = ""; // Bir xil rasmni ketma-ket tanlasa ham ishlaydigan qilish bug-fix
+                e.target.value = "";
               }}
             />
           </label>
 
-          {/* EMOJI/STIKER OCHISH TUGMASI */}
+          {/* EMOJI TUGMASI */}
           <button
             type="button"
             onClick={() => setShowStickers(!showStickers)}
-            className={`w-11 h-11 md:w-13 md:h-13 rounded-xl flex items-center justify-center transition active:scale-95 ${
-              showStickers ? "bg-blue-500 text-white" : "bg-[#17212b] text-slate-400 hover:bg-[#223040] hover:text-white"
+            className={`w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center transition active:scale-95 ${
+              showStickers ? "bg-blue-500 text-white" : "bg-[#17212b] text-slate-400 hover:bg-[#223040]"
             }`}
           >
-            <FiSmile className="text-xl" />
+            <FiSmile className="text-lg" />
           </button>
 
-          {/* MATN LI INPUT VALYUTASI */}
+          {/* INPUT MAYDONI */}
           <input
             type="text"
             placeholder="Xabar yozing..."
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="flex-1 h-11 md:h-13 bg-[#17212b]/50 border border-white/5 rounded-xl px-4 text-white placeholder-slate-500 outline-none focus:border-blue-500/50 transition text-sm md:text-base"
+            className="flex-1 min-w-0 h-10 bg-[#17212b]/50 border border-white/5 rounded-xl px-3 text-white placeholder-slate-500 outline-none focus:border-blue-500/50 transition text-sm md:text-base"
           />
 
-          {/* MIKROFON / STOP TUGMASI */}
-          {!recording ? (
+          {/* DYNAMIC TUGMA: Telegram uslubida (Yozganda SEND, bo'sh turganda MIC) */}
+          {text.trim() ? (
             <button
-              type="button"
-              onClick={startRecording}
-              className="w-11 h-11 md:w-13 md:h-13 rounded-xl bg-[#17212b] text-slate-400 hover:bg-[#223040] hover:text-white flex items-center justify-center transition active:scale-95"
+              type="submit"
+              className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-lg bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-md shadow-blue-500/20 active:scale-95 transition-all"
             >
-              <FiMic className="text-xl" />
+              <FiSend />
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={stopRecording}
-              className="w-11 h-11 md:w-13 md:h-13 rounded-xl bg-red-500 text-white flex items-center justify-center animate-pulse shadow-lg shadow-red-500/20 active:scale-95"
-            >
-              <FiSquare className="text-sm" />
-            </button>
+            <>
+              {!recording ? (
+                <button
+                  type="button"
+                  onClick={startRecording}
+                  className="w-10 h-10 flex-shrink-0 rounded-xl bg-[#17212b] text-slate-400 hover:bg-[#223040] flex items-center justify-center transition active:scale-95"
+                >
+                  <FiMic className="text-lg" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={stopRecording}
+                  className="w-10 h-10 flex-shrink-0 rounded-xl bg-red-500 text-white flex items-center justify-center animate-pulse active:scale-95"
+                >
+                  <FiSquare className="text-xs" />
+                </button>
+              )}
+            </>
           )}
 
-          {/* YUBORISH TUGMASI */}
-          <button
-            type="submit"
-            disabled={!text.trim()}
-            className={`w-11 h-11 md:w-13 md:h-13 rounded-xl flex items-center justify-center text-xl transition active:scale-95 ${
-              text.trim()
-                ? "bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-md shadow-blue-500/20 cursor-pointer hover:scale-105"
-                : "bg-[#17212b] text-slate-600 cursor-not-allowed"
-            }`}
-          >
-            <FiSend />
-          </button>
-
         </form>
-
       </div>
     </div>
   );

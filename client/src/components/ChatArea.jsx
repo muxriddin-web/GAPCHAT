@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import API from "../api/axios";
-import socket from "../socket";
+import { useChat } from "../context/ChatContext"; // 🚀 Global Context hookni import qilamiz
 import MessageBubble from "./MessageBubble";
 import ChatInput from "./ChatInput";
 import UserProfileModal from "./UserProfileModal";
@@ -8,103 +8,79 @@ import TypingIndicator from "./TypingIndicator";
 import axios from "axios";
 import { FiArrowLeft, FiLogOut } from "react-icons/fi";
 
-function ChatArea({ selectedUser, setSelectedUser, notifications, setNotifications, messages, setMessages }) {
+function ChatArea() {
+  // 🔥 Barcha holat (state)larni markaziy Context'dan olamiz. Prop drilling kerak emas!
+  const { selectedUser, setSelectedUser, messages, setMessages } = useChat();
+  
   const currentUser = JSON.parse(localStorage.getItem("userInfo"));
   const [openUserProfile, setOpenUserProfile] = useState(false);
   const [text, setText] = useState("");
   const [typing, setTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const isSendingRef = useRef(false);
 
-  // Har gal yangi xabar kelganda pastga skroll qilish
+  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  // SOCKET CONNECT
-  useEffect(() => {
-    if (currentUser?._id) {
-      socket.emit("addUser", currentUser._id);
-    }
-  }, []);
-
-  // NOTIFICATION PERMISSION
+  // Push Notification ruxsati
   useEffect(() => {
     if (Notification.permission !== "granted") {
       Notification.requestPermission();
     }
   }, []);
 
-  // RECEIVE MESSAGE
+  // TYPING EFFECT LOGIC
   useEffect(() => {
-    socket.on("receiveMessage", (data) => {
-      const audio = new Audio("/notification.mp3");
-      audio.play().catch((err) => console.log("Audio play error:", err));
+    if (!text.trim()) {
+      setTyping(false);
+      return;
+    }
+    setTyping(true);
+    const timeout = setTimeout(() => {
+      setTyping(false);
+    }, 1200);
 
-      if (Notification.permission === "granted") {
-        new Notification(data.senderName, {
-          body: data.sticker ? "Sizga stiker yubordi 🎭" : data.text || "Yangi xabar",
-          icon: "https://telegram.org/img/t_logo.png",
-        });
-      }
+    return () => clearTimeout(timeout);
+  }, [text]);
 
-      if (data.sender !== currentUser?._id) {
-        setNotifications((prev) => ({
-          ...prev,
-          [data.sender]: {
-            count: (prev[data.sender]?.count || 0) + 1,
-            time: Date.now(),
-          },
-        }));
-      }
+  // 1. SEND TEXT MESSAGE
+  const sendMessageHandler = async (e) => {
+    if (e) e.preventDefault();
+    if (!text.trim() || isSendingRef.current || !selectedUser?._id) return;
 
-      if (selectedUser && selectedUser._id === data.sender) {
-        setMessages((prev) => [...prev, data]);
-      }
-    });
-
-    return () => {
-      socket.off("receiveMessage");
-    };
-  }, [selectedUser]);
-
-  // FETCH MESSAGES
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!selectedUser || !currentUser?._id) return;
-      try {
-        const { data } = await API.get(`/messages/${currentUser._id}/${selectedUser._id}`);
-        setMessages(data);
-      } catch (error) {
-        console.error("Xabarlarni yuklashda xatolik:", error);
-      }
-    };
-    fetchMessages();
-  }, [selectedUser]);
-
-  // SEND TEXT MESSAGE
-  const sendMessageHandler = async () => {
-    if (!text.trim()) return;
+    const currentText = text.trim();
+    setText(""); 
 
     const messageData = {
       sender: currentUser._id,
       receiver: selectedUser._id,
-      text: text.trim(),
+      text: currentText,
       senderName: currentUser.username,
     };
 
     try {
+      isSendingRef.current = true;
       const { data } = await API.post("/messages", messageData);
-      socket.emit("sendMessage", data);
-      setMessages((prev) => [...prev, data]);
-      setText("");
+      
+      setMessages((prev) => {
+        if (prev.some((m) => String(m._id) === String(data._id))) return prev;
+        return [...prev, data];
+      });
     } catch (error) {
       console.error("Xabar yuborishda xatolik:", error);
+      setText(currentText);
+    } finally {
+      isSendingRef.current = false;
     }
   };
 
-  // SEND STICKER
+  // 2. SEND STICKER
   const sendStickerHandler = async (sticker) => {
+    if (isSendingRef.current || !selectedUser?._id) return;
     try {
+      isSendingRef.current = true;
       const messageData = {
         sender: currentUser._id,
         receiver: selectedUser._id,
@@ -113,22 +89,28 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
       };
 
       const { data } = await API.post("/messages", messageData);
-      socket.emit("sendMessage", data);
-      setMessages((prev) => [...prev, data]);
+      
+      setMessages((prev) => {
+        if (prev.some((m) => String(m._id) === String(data._id))) return prev;
+        return [...prev, data];
+      });
     } catch (error) {
       console.error("Sticker yuborishda xatolik:", error);
+    } finally {
+      isSendingRef.current = false;
     }
   };
 
-  // SEND IMAGE
+  // 3. SEND IMAGE (ImgBB)
   const sendImageHandler = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || isSendingRef.current || !selectedUser?._id) return;
 
     const formData = new FormData();
     formData.append("image", file);
 
     try {
+      isSendingRef.current = true;
       const { data: imageData } = await axios.post(
         `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_KEY}`,
         formData
@@ -142,16 +124,23 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
       };
 
       const { data } = await API.post("/messages", messageData);
-      socket.emit("sendMessage", data);
-      setMessages((prev) => [...prev, data]);
+      
+      setMessages((prev) => {
+        if (prev.some((m) => String(m._id) === String(data._id))) return prev;
+        return [...prev, data];
+      });
     } catch (error) {
       console.error("Rasm yuklashda xatolik:", error);
+    } finally {
+      isSendingRef.current = false;
     }
   };
 
-  // SEND VOICE (Tuzatilgan qism: localhost olib tashlandi, umumiy API ulandi)
+  // 4. SEND VOICE
   const sendVoiceHandler = async (audioBlob) => {
+    if (isSendingRef.current || !selectedUser?._id) return;
     try {
+      isSendingRef.current = true;
       const formData = new FormData();
       formData.append("audio", audioBlob, "voice.webm");
 
@@ -169,52 +158,30 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
       };
 
       const { data } = await API.post("/messages", messageData);
-      socket.emit("sendMessage", data);
-      setMessages((prev) => [...prev, data]);
+      
+      setMessages((prev) => {
+        if (prev.some((m) => String(m._id) === String(data._id))) return prev;
+        return [...prev, data];
+      });
     } catch (error) {
       console.error("Ovozli xabar yuborishda xatolik:", error);
+    } finally {
+      isSendingRef.current = false;
     }
   };
 
-  // TYPING EFFECT
-  useEffect(() => {
-    if (!text.trim()) {
-      setTyping(false);
-      return;
-    }
-    setTyping(true);
-    const timeout = setTimeout(() => {
-      setTyping(false);
-    }, 1200);
-
-    return () => clearTimeout(timeout);
-  }, [text]);
-
-  // EMPTY CHAT (📱 KLAS QO'SHILDI: max-md:hidden qo'shildi, mobil ekranda siqilishni oldini oladi)
+  // Agar biror bir foydalanuvchi tanlanmagan bo'lsa, chat maydonini bo'sh qoldiramiz
   if (!selectedUser) {
     return (
-      <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-[#071018] max-md:hidden">
-        <div className="absolute w-[500px] h-[500px] rounded-full bg-cyan-500/10 blur-[140px]" />
-        <div className="relative z-10 text-center">
-          <div className="w-28 h-28 rounded-[35px] bg-gradient-to-br from-blue-500 to-cyan-400 mx-auto flex items-center justify-center text-5xl font-black shadow-2xl shadow-cyan-500/30">
-            N
-          </div>
-          <h1 className="mt-8 text-5xl font-black bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
-            NexChat
-          </h1>
-          <p className="mt-4 text-slate-400 text-lg">
-            Suhbatni boshlash uchun chatni tanlang
-          </p>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center bg-[#071018] text-white/40">
+        <p className="text-lg">Yozishishni boshlash uchun chatni tanlang</p>
       </div>
     );
   }
 
   return (
     <>
-      {/* Asosiy chat maydoni */}
       <div className="flex-1 min-w-0 flex flex-col relative overflow-hidden bg-[#071018] text-white h-screen">
-        
         {/* BACKGROUND GLOW */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] rounded-full bg-blue-500/5 blur-[140px]" />
@@ -223,8 +190,6 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
 
         {/* TOPBAR */}
         <div className="w-full h-[70px] md:h-[85px] border-b border-white/5 bg-[#0e1621]/80 backdrop-blur-md flex items-center justify-between px-6 relative z-10">
-          
-          {/* Chap tomon: Profil qismi */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSelectedUser(null)}
@@ -242,15 +207,14 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
                 className="w-12 h-12 md:w-13 md:h-13 rounded-2xl object-cover border border-white/10 group-hover:scale-105 transition"
               />
               <div>
-                <h2 className="font-bold text-base md:text-lg group-hover:text-blue-400 transition">{selectedUser.username}</h2>
+                <h2 className="font-bold text-base md:text-lg group-hover:text-blue-400 transition">{selectedUser?.username}</h2>
                 <p className="text-xs md:text-sm text-green-400 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /> Onlayn
+                  <span className="w-2 h-2 rounded-full bg-green-400" /> Onlayn
                 </p>
               </div>
             </div>
           </div>
 
-          {/* O'ng tomon: Chatdan chiqish tugmasi */}
           <button
             onClick={() => setSelectedUser(null)}
             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200 font-medium text-sm border border-red-500/10 active:scale-95 shadow-sm"
@@ -259,14 +223,13 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
             <FiLogOut className="text-base md:text-lg" />
             <span className="hidden sm:inline">Chatdan chiqish</span>
           </button>
-
         </div>
 
         {/* MESSAGES AREA */}
         <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 relative z-10 flex flex-col gap-6 scrollbar-thin">
           {messages.map((msg) => (
             <MessageBubble
-              key={msg._id}
+              key={msg._id || msg.createdAt || Math.random()} 
               msg={msg}
               currentUser={currentUser}
               setMessages={setMessages}
@@ -293,7 +256,6 @@ function ChatArea({ selectedUser, setSelectedUser, notifications, setNotificatio
         </div>
       </div>
 
-      {/* USER PROFILE MODAL */}
       <UserProfileModal
         open={openUserProfile}
         setOpen={setOpenUserProfile}

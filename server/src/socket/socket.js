@@ -1,38 +1,45 @@
-import { Server } from "socket.io";
-import http from "http";
-import express from "express";
-import dotenv from "dotenv";
+let _io = null;
 
-dotenv.config(); // .env faylni o'qish uchun
+// userId -> Set of socketIds (bir user bir nechta tab/qurilmada bo'lishi mumkin)
+const userSocketMap = {};
 
-const app = express();
-const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: {
-    // Statik "http://localhost:5173" o'rniga dinamik havolani qo'yamiz:
-    origin: [process.env.CLIENT_URL, "http://localhost:5173"], 
-    methods: ["GET", "POST"],
-    credentials: true
-  },
-});
-
-const userSocketMap = {}; 
-
-export const getReceiverSocketId = (receiverId) => {
-  return userSocketMap[receiverId];
+export const initIO = (ioInstance) => {
+  _io = ioInstance;
 };
 
-io.on("connection", (socket) => {
-  const userId = socket.handshake.query.userId;
-  if (userId !== "undefined") userSocketMap[userId] = socket.id;
+export const getIO = () => _io;
 
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+export const getReceiverSocketId = (receiverId) => {
+  const id = receiverId?.toString();
+  const sockets = userSocketMap[id];
+  if (!sockets || sockets.size === 0) return null;
+  return [...sockets][0];
+};
 
-  socket.on("disconnect", () => {
-    delete userSocketMap[userId];
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
-  });
-});
+export const getAllReceiverSocketIds = (receiverId) => {
+  const id = receiverId?.toString();
+  const sockets = userSocketMap[id];
+  if (!sockets || sockets.size === 0) return [];
+  return [...sockets];
+};
 
-export { app, io, server };
+export const setUserSocket = (userId, socketId) => {
+  if (!userId || userId === "undefined" || !socketId) return;
+  const id = userId.toString();
+  if (!userSocketMap[id]) {
+    userSocketMap[id] = new Set();
+  }
+  userSocketMap[id].add(socketId);
+  console.log(`[Socket] User ${id} socketlari:`, [...userSocketMap[id]]);
+};
+
+export const removeUserSocket = (socketId) => {
+  for (const uid in userSocketMap) {
+    userSocketMap[uid].delete(socketId);
+    if (userSocketMap[uid].size === 0) {
+      delete userSocketMap[uid];
+    }
+  }
+};
+
+export const getOnlineUserIds = () => Object.keys(userSocketMap);
