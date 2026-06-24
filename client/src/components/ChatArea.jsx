@@ -6,7 +6,7 @@ import ChatInput from "./ChatInput";
 import UserProfileModal from "./UserProfileModal";
 import TypingIndicator from "./TypingIndicator";
 import axios from "axios";
-import { FiArrowLeft, FiLogOut } from "react-icons/fi";
+import { FiArrowLeft } from "react-icons/fi";
 
 function ChatArea() {
   const { selectedUser, setSelectedUser, messages, setMessages } = useChat();
@@ -183,14 +183,14 @@ function ChatArea() {
           <div className="absolute bottom-[-150px] right-[-100px] w-[450px] h-[450px] rounded-full bg-cyan-400/5 blur-[140px]" />
         </div>
 
-        {/* 🚀 TOPBAR YANGILANDI: Mobilda balandligi h-[92px] qilindi va pt-5 orqali ichidagi hamma narsa pastga surildi */}
-        <div className="w-full h-[92px] md:h-[120px] pt-20 md:pt-0 shrink-0 border-b border-white/5 bg-[#0e1621] flex items-center justify-between px-4 md:px-6 relative z-20 shadow-md select-none">
-          <div className="flex items-center gap-3 min-w-0">
+        {/* 🚀 TOPBAR: Balandlik h-[125px] gacha oshirildi, pt-12 bilan pastga surildi va elementlar tagiga tekislandi (items-end pb-3) */}
+        <div className="w-full h-[125px] md:h-[85px] pt-12 md:pt-0 pb-3 md:pb-0 shrink-0 border-b border-white/5 bg-[#0e1621] flex items-end md:items-center justify-between px-4 md:px-6 relative z-20 shadow-md select-none">
+          <div className="flex items-center gap-3 min-w-0 w-full">
             
-            {/* ORQAGA QAYTISH TUGMASI */}
+            {/* 🚀 ORQAGA QAYTISH TUGMASI: md:hidden qo'shildi, endi kompyuterda ko'rinmaydi, faqat mobilda chiqadi */}
             <button
               onClick={() => setSelectedUser(null)}
-              className="w-10 h-10 rounded-xl bg-[#17212b] flex items-center justify-center hover:bg-[#223040] transition active:scale-95 shrink-0"
+              className="md:hidden w-10 h-10 rounded-xl bg-[#17212b] flex items-center justify-center hover:bg-[#223040] transition active:scale-95 shrink-0"
               title="Orqaga qaytish"
             >
               <FiArrowLeft className="text-xl text-slate-300" />
@@ -216,16 +216,8 @@ function ChatArea() {
               </div>
             </div>
           </div>
-
-          {/* CHIQUVCHI/YOPUVCHI TUGMA */}
-          <button
-            onClick={() => setSelectedUser(null)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200 font-medium text-xs md:text-sm border border-red-500/10 active:scale-95"
-            title="Chatdan chiqish"
-          >
-            <FiLogOut className="text-base" />
-            <span className="hidden sm:inline">Chiqish</span>
-          </button>
+          
+          {/* 🚀 O'ng tarafdagi ortiqcha "Chiqish" tugmasi butunlay olib tashlandi */}
         </div>
 
         {/* MESSAGES AREA */}
