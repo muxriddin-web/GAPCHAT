@@ -184,7 +184,7 @@ function ChatArea() {
         </div>
 
         {/* 🚀 TOPBAR YANGILANDI: Mobilda balandligi h-[92px] qilindi va pt-5 orqali ichidagi hamma narsa pastga surildi */}
-        <div className="w-full h-[92px] md:h-[85px] pt-5 md:pt-0 shrink-0 border-b border-white/5 bg-[#0e1621] flex items-center justify-between px-4 md:px-6 relative z-20 shadow-md select-none">
+        <div className="w-full h-[92px] md:h-[85px] pt-7 md:pt-0 shrink-0 border-b border-white/5 bg-[#0e1621] flex items-center justify-between px-4 md:px-6 relative z-20 shadow-md select-none">
           <div className="flex items-center gap-3 min-w-0">
             
             {/* ORQAGA QAYTISH TUGMASI */}
