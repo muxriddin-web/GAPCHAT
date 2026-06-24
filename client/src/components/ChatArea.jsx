@@ -175,7 +175,6 @@ function ChatArea() {
 
   return (
     <>
-      {/* 🚀 MD:H-SCREEN VA H-[100DVH] -> Mobil brauzer panellari ostida qolib ketishni oldini oladi */}
       <div className="flex-1 min-w-0 flex flex-col relative overflow-hidden bg-[#071018] text-white h-[100dvh] md:h-screen">
         
         {/* BACKGROUND GLOW */}
@@ -184,18 +183,20 @@ function ChatArea() {
           <div className="absolute bottom-[-150px] right-[-100px] w-[450px] h-[450px] rounded-full bg-cyan-400/5 blur-[140px]" />
         </div>
 
-        {/* 🚀 TOPBAR: "shrink-0" qo'shildi (Hech qachon siqilib yo'q bo'lmaydi) va qat'iy joylashdi */}
-        <div className="w-full h-[70px] md:h-[85px] shrink-0 border-b border-white/5 bg-[#0e1621] flex items-center justify-between px-4 md:px-6 relative z-20 shadow-md">
+        {/* 🚀 TOPBAR YANGILANDI: Mobilda balandligi h-[92px] qilindi va pt-5 orqali ichidagi hamma narsa pastga surildi */}
+        <div className="w-full h-[92px] md:h-[85px] pt-5 md:pt-0 shrink-0 border-b border-white/5 bg-[#0e1621] flex items-center justify-between px-4 md:px-6 relative z-20 shadow-md select-none">
           <div className="flex items-center gap-3 min-w-0">
-            {/* 🚀 ORQAGA QAYTISH TUGMASI: Mobilda bosh sahifaga (chatlar ro'yxatiga) qaytaradi */}
+            
+            {/* ORQAGA QAYTISH TUGMASI */}
             <button
               onClick={() => setSelectedUser(null)}
-              className="md:hidden w-10 h-10 rounded-xl bg-[#17212b] flex items-center justify-center hover:bg-[#223040] transition active:scale-95 shrink-0"
+              className="w-10 h-10 rounded-xl bg-[#17212b] flex items-center justify-center hover:bg-[#223040] transition active:scale-95 shrink-0"
               title="Orqaga qaytish"
             >
               <FiArrowLeft className="text-xl text-slate-300" />
             </button>
             
+            {/* PROFIL QISMI */}
             <div
               onClick={() => setOpenUserProfile(true)}
               className="flex items-center gap-3 cursor-pointer group min-w-0"
@@ -216,6 +217,7 @@ function ChatArea() {
             </div>
           </div>
 
+          {/* CHIQUVCHI/YOPUVCHI TUGMA */}
           <button
             onClick={() => setSelectedUser(null)}
             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200 font-medium text-xs md:text-sm border border-red-500/10 active:scale-95"
