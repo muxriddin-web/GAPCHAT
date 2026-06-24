@@ -13,7 +13,7 @@ function ChatInput({
   setText,
   sendMessageHandler,
   sendImageHandler,
-  sendStickerHandler, // Prop xatolik bermasligi uchun qoldirildi
+  sendStickerHandler,
   sendVoiceHandler,
 }) {
   const [recording, setRecording] = useState(false);
@@ -75,18 +75,21 @@ function ChatInput({
     <div className="p-2 md:p-4 relative w-full box-border">
       <div className="rounded-xl p-2 border border-white/5 bg-[#0e1621]">
         
-        {/* 🚀 EMOJI PICKER PANEL: Tepadagi ortiqcha STICKERS bloki olib tashlandi */}
+        {/* EMOJI PICKER PANEL */}
         {showStickers && (
           <div className="absolute bottom-[100%] left-2 right-2 mb-2 flex flex-col bg-[#111c29] p-2 rounded-2xl border border-white/10 shadow-2xl z-50 animate-fade-in">
             <div className="overflow-hidden rounded-xl">
               <EmojiPicker
                 theme="dark"
                 width="100%"
-                height={260} // Balandligi biroz moslashtirildi
+                height={360} // 🚀 Balandlik oshirildi, emojilar ko'proq qator bo'lib sig'adi
                 lazyLoadEmojis={true}
                 skinTonesDisabled={true}
                 searchDisabled={false}
-                suggestedEmojisMode="none" // Kutubxonaning ichki tavsiyalarini ham o'chiradi
+                suggestedEmojisMode="none"
+                previewConfig={{
+                  showPreview: false // 🚀 Eng pastdagi ortiqcha "What's Your Mood?" paneli olib tashlandi, joy bo'shatildi
+                }}
                 onEmojiClick={(emojiData) => {
                   setText((prev) => prev + emojiData.emoji);
                 }}
@@ -140,7 +143,7 @@ function ChatInput({
             className="flex-1 min-w-0 h-10 bg-[#17212b]/50 border border-white/5 rounded-xl px-3 text-white placeholder-slate-500 outline-none focus:border-blue-500/50 transition text-sm md:text-base"
           />
 
-          {/* DYNAMIC TUGMA: Telegram uslubida (Yozganda SEND, bo'sh turganda MIC) */}
+          {/* DYNAMIC TUGMA */}
           {text.trim() ? (
             <button
               type="submit"
