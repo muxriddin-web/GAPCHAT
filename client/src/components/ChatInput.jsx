@@ -82,13 +82,13 @@ function ChatInput({
               <EmojiPicker
                 theme="dark"
                 width="100%"
-                height={360} // 🚀 Balandlik oshirildi, emojilar ko'proq qator bo'lib sig'adi
+                height={360}
                 lazyLoadEmojis={true}
                 skinTonesDisabled={true}
                 searchDisabled={false}
                 suggestedEmojisMode="none"
                 previewConfig={{
-                  showPreview: false // 🚀 Eng pastdagi ortiqcha "What's Your Mood?" paneli olib tashlandi, joy bo'shatildi
+                  showPreview: false
                 }}
                 onEmojiClick={(emojiData) => {
                   setText((prev) => prev + emojiData.emoji);
@@ -109,16 +109,16 @@ function ChatInput({
         {/* INPUT INTERFACE */}
         <form onSubmit={handleSubmit} className="flex items-center gap-1.5 w-full">
 
-          {/* RASM TUGMASI */}
+          {/* 🚀 RASM TUGMASI: Mobil brauzerlar uchun 'hidden' klassi 'sr-only' ga almashtirildi */}
           <label className="w-10 h-10 flex-shrink-0 rounded-xl bg-[#17212b] text-slate-400 flex items-center justify-center cursor-pointer hover:bg-[#223040] transition active:scale-95">
             <FiImage className="text-lg" />
             <input
               type="file"
               accept="image/*"
-              hidden
+              className="sr-only" 
               onChange={(e) => {
                 sendImageHandler(e);
-                e.target.value = "";
+                e.target.value = ""; // Bir xil rasmni qayta yuklay olish uchun tozalash
               }}
             />
           </label>
