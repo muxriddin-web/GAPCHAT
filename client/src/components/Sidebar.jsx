@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import API from "../api/axios";
-import { useChat } from "../context/ChatContext"; // 🚀 Global Context'ni ulaymiz
-import { FiSearch } from "react-icons/fi";
+import { useChat } from "../context/ChatContext"; // Global Context
+import { FiSearch, FiLogOut } from "react-icons/fi"; // FiLogOut ikonkasini qo'shdik
 
 function Sidebar() {
-  // 🔥 Global context'dan kerakli statelarni olamiz
   const { setSelectedUser, selectedUser, notifications, setNotifications } = useChat();
   
   const [chats, setChats] = useState([]);
@@ -26,9 +25,9 @@ function Sidebar() {
     };
 
     fetchChats();
-  }, [currentUser?._id, selectedUser]); // Har safar chat o'zgarganda ro'yxat yangilanadi
+  }, [currentUser?._id, selectedUser]);
 
-  // 2. GLOBAL QIDIRUV MANTIQI (DEBOUNCE BILAN)
+  // 2. GLOBAL QIDIRUV MANTIQI
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -48,22 +47,50 @@ function Sidebar() {
     return () => clearTimeout(delayDebounce);
   }, [searchQuery]);
 
-  // 3. FOYDALANUVCHI BOSILGANDA ISHLAYDIGAN ASOSIY FUNKSIYA
+  // 3. FOYDALANUVCHI BOSILGANDA ISHLAYDIGAN FUNKSIYA
   const handleSelectUser = (user) => {
-    setSelectedUser(user); // 🚀 MATN SHU YERDA: Global holatni o'zgartiradi va ChatArea ochiladi!
-    setSearchQuery(""); // Qidiruv oynasini tozalaydi
+    setSelectedUser(user);
+    setSearchQuery("");
     setSearchResults([]);
-
-    // Agar shu odamdan kelgan o'qilmagan xabarlar bo'lsa, ularni bildirishnomadan o'chiradi
     setNotifications((prev) => prev.filter((n) => String(n.sender) !== String(user._id)));
   };
 
-  // Qidiruv bo'sh bo'lsa eski chatlar, yozilgan bo'lsa qidiruv natijasi chiqadi
+  // Tizimdan chiqish (Logout) funksiyasi
+  const handleLogout = () => {
+    localStorage.removeItem("userInfo");
+    window.location.reload(); // Sahifani yangilab, login oynasiga otib yuboradi
+  };
+
   const displayUsers = searchQuery.trim() ? searchResults : chats;
 
   return (
     <div className="w-full h-full bg-[#0e1621] flex flex-col text-white">
-      {/* QIDIRUV PANEL (SEARCH) */}
+      
+      {/* 🌟 1. SIZNING SHAXSIY PROFILINGIZ (HEADER PART) */}
+      <div className="p-4 border-b border-white/5 bg-[#0e1621] flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <img
+            src={currentUser?.profilePic || "https://i.imgur.com/HeIi0wU.png"}
+            alt="Mening Profilim"
+            className="w-10 h-10 rounded-xl object-cover border border-white/10"
+          />
+          <div className="min-w-0">
+            <h2 className="font-bold text-sm truncate text-white">{currentUser?.username}</h2>
+            <p className="text-[11px] text-blue-400">Mening profilim</p>
+          </div>
+        </div>
+        
+        {/* Chiqish tugmasi */}
+        <button
+          onClick={handleLogout}
+          className="p-2 rounded-xl bg-white/5 hover:bg-red-500/20 text-white/60 hover:text-red-400 transition duration-150 active:scale-95"
+          title="Tizimdan chiqish"
+        >
+          <FiLogOut className="text-lg" />
+        </button>
+      </div>
+
+      {/* 2. QIDIRUV PANEL (SEARCH) */}
       <div className="p-4 border-b border-white/5 bg-[#0e1621]">
         <div className="relative">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-lg" />
@@ -77,7 +104,7 @@ function Sidebar() {
         </div>
       </div>
 
-      {/* CHATLAR VA FOYDALANUVCHILAR RO'YXATI */}
+      {/* 3. CHATLAR VA FOYDALANUVCHILAR RO'YXATI */}
       <div className="flex-1 overflow-y-auto divide-y divide-white/[0.02] scrollbar-thin">
         {displayUsers.length === 0 ? (
           <div className="p-6 text-center text-white/30 text-sm">
@@ -85,10 +112,7 @@ function Sidebar() {
           </div>
         ) : (
           displayUsers.map((user) => {
-            // Hozirgi tanlangan chatni aniqlash (Dizaynini o'zgartirish uchun)
             const isSelected = selectedUser?._id === user._id;
-            
-            // Shu foydalanuvchidan yangi xabar bormi yoki yo'qligini tekshirish
             const hasNotification = notifications.some((n) => String(n.sender) === String(user._id));
 
             return (
@@ -115,8 +139,6 @@ function Sidebar() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-sm truncate text-white">{user.username}</h3>
-                    
-                    {/* Yangi xabar kelganda yonib-o'chuvchi ko'k nuqta */}
                     {hasNotification && (
                       <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse shadow-sm shadow-blue-500" />
                     )}
