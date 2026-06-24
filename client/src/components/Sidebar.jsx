@@ -1,157 +1,239 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import ProfileModal from "./ProfileModal";
+import { FiLogOut, FiSearch, FiTrash2 } from "react-icons/fi";
 import API from "../api/axios";
-import { useChat } from "../context/ChatContext"; // Global Context
-import { FiSearch, FiLogOut } from "react-icons/fi"; // FiLogOut ikonkasini qo'shdik
+import { useChat } from "../context/ChatContext"; // 🚀 1. Global Context ulandi
 
-function Sidebar() {
-  const { setSelectedUser, selectedUser, notifications, setNotifications } = useChat();
-  
-  const [chats, setChats] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+function Sidebar() { 
+  // 🚀 2. Prop-drilling olib tashlandi. Kerakli statelar to'g'ridan-to'g'ri markazdan olinadi
+  const { selectedUser, setSelectedUser, notifications = {}, setNotifications } = useChat();
+
+  const [currentUser] = useState(() => JSON.parse(localStorage.getItem("userInfo")) || {});
+  const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const currentUser = JSON.parse(localStorage.getItem("userInfo"));
+  const [openProfile, setOpenProfile] = useState(false);
+  const [selectedChat, setSelectedChat] = useState(null);
 
-  // 1. AKTIV CHATLAR RO'YXATINI BAZADAN YUKLASH
+  // GET CHATS
   useEffect(() => {
-    if (!currentUser?._id) return;
-    
     const fetchChats = async () => {
+      if (!currentUser?._id) return;
       try {
         const { data } = await API.get(`/messages/chats/${currentUser._id}`);
-        setChats(data);
+        const deletedChats = JSON.parse(localStorage.getItem("deletedChats")) || [];
+
+        const filtered = data.filter(
+          (u) => u._id !== currentUser?._id && !deletedChats.includes(u._id)
+        );
+        setUsers(filtered);
       } catch (error) {
-        console.error("Chatlarni yuklashda xatolik:", error);
+        console.error("FETCH CHATS ERROR:", error);
       }
     };
 
     fetchChats();
-  }, [currentUser?._id, selectedUser]);
+  }, [currentUser?._id]);
 
-  // 2. GLOBAL QIDIRUV MANTIQI
+  // GLOBAL SEARCH
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    const searchUsers = async () => {
+    const searchGlobalUsers = async () => {
+      if (!search.trim()) {
+        setSearchResults([]);
+        return;
+      }
       try {
-        const { data } = await API.get(`/messages/search?query=${searchQuery}`);
-        setSearchResults(data);
+        const { data } = await API.get(`/messages/search?search=${search}`);
+        const filtered = data.filter((u) => u._id !== currentUser?._id);
+        setSearchResults(filtered);
       } catch (error) {
-        console.error("Qidiruvda xatolik:", error);
+        console.error("GLOBAL SEARCH ERROR:", error);
       }
     };
 
-    const delayDebounce = setTimeout(searchUsers, 400);
-    return () => clearTimeout(delayDebounce);
-  }, [searchQuery]);
+    const delayDebounceFn = setTimeout(() => {
+      searchGlobalUsers();
+    }, 400);
 
-  // 3. FOYDALANUVCHI BOSILGANDA ISHLAYDIGAN FUNKSIYA
-  const handleSelectUser = (user) => {
-    setSelectedUser(user);
-    setSearchQuery("");
-    setSearchResults([]);
-    setNotifications((prev) => prev.filter((n) => String(n.sender) !== String(user._id)));
-  };
+    return () => clearTimeout(delayDebounceFn);
+  }, [search, currentUser?._id]);
 
-  // Tizimdan chiqish (Logout) funksiyasi
-  const handleLogout = () => {
+  const processedUsers = useMemo(() => {
+    if (search.trim()) {
+      return searchResults;
+    }
+    return [...users].sort((a, b) => {
+      const aTime = notifications?.[a?._id]?.time || 0;
+      const bTime = notifications?.[b?._id]?.time || 0;
+      return bTime - aTime;
+    });
+  }, [users, search, searchResults, notifications]);
+
+  const logoutHandler = useCallback(() => {
     localStorage.removeItem("userInfo");
-    window.location.reload(); // Sahifani yangilab, login oynasiga otib yuboradi
-  };
+    window.location.href = "/login";
+  }, []);
 
-  const displayUsers = searchQuery.trim() ? searchResults : chats;
+  const deleteChatHandler = useCallback((e, userId) => {
+    e.stopPropagation();
+    const deletedChats = JSON.parse(localStorage.getItem("deletedChats")) || [];
+    const updated = [...deletedChats, userId];
+
+    localStorage.setItem("deletedChats", JSON.stringify(updated));
+    setUsers((prev) => prev.filter((user) => user._id !== userId));
+    
+    setSelectedUser(null);
+    setSelectedChat(null);
+  }, [setSelectedUser]);
 
   return (
-    <div className="w-full h-full bg-[#0e1621] flex flex-col text-white">
+    /* 📱 MOBIL UCHUN SEHRLI KLAS: Agar chat tanlangan bo'lsa mobil ekranda yashirinadi (max-md:hidden), tanlanmagan bo'lsa to'liq ekran bo'ladi (w-full) */
+    <div className={`w-full md:w-[360px] md:shrink-0 glass border-r border-white/5 flex flex-col h-screen bg-[#0e1621]/90 backdrop-blur-xl ${
+      selectedUser ? "max-md:hidden" : "flex"
+    }`}>
       
-      {/* 🌟 1. SIZNING SHAXSIY PROFILINGIZ (HEADER PART) */}
-      <div className="p-4 border-b border-white/5 bg-[#0e1621] flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          <img
-            src={currentUser?.profilePic || "https://i.imgur.com/HeIi0wU.png"}
-            alt="Mening Profilim"
-            className="w-10 h-10 rounded-xl object-cover border border-white/10"
-          />
-          <div className="min-w-0">
-            <h2 className="font-bold text-sm truncate text-white">{currentUser?.username}</h2>
-            <p className="text-[11px] text-blue-400">Mening profilim</p>
+      {/* LOGO */}
+      <div className="h-[90px] px-6 flex items-center justify-between border-b border-white/5 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-2xl font-black shadow-lg shadow-cyan-500/20 select-none">
+            N
+          </div>
+          <div className="select-none">
+            <h1 className="text-xl font-black tracking-wide bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+              NexChat
+            </h1>
+            <p className="text-xs text-slate-500 font-medium">Modern Messenger</p>
           </div>
         </div>
+      </div>
+
+      {/* PROFILE CARD */}
+      <div
+        onClick={() => setOpenProfile(true)}
+        className="p-4 mx-2 my-2 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-white/5 transition duration-200 select-none group"
+      >
+        <img
+          src={currentUser?.profilePic || "https://i.imgur.com/HeIi0wU.png"}
+          alt=""
+          className="w-12 h-12 md:w-13 md:h-13 rounded-2xl object-cover border border-white/10 group-hover:scale-105 transition"
+        />
+        <div className="flex-1 min-w-0">
+          <h2 className="font-bold text-base text-slate-200 truncate">
+            {currentUser?.username || "Foydalanuvchi"}
+          </h2>
+          <p className="text-xs text-green-400 flex items-center gap-1 mt-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Onlayn
+          </p>
+        </div>
+      </div>
+
+      {/* SEARCH INPUT */}
+      <div className="p-3 shrink-0">
+        <div className="h-[48px] bg-[#17212b]/60 focus-within:border-blue-500/50 rounded-xl px-4 flex items-center gap-3 border border-white/5 transition">
+          <FiSearch className="text-slate-500 text-lg" />
+          <input
+            type="text"
+            placeholder="Global qidiruv (username yozing)..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-transparent flex-1 outline-none text-sm text-white placeholder-slate-500"
+          />
+        </div>
+      </div>
+
+      {/* USERS / CHATS LIST */}
+      <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-1 scrollbar-thin">
+        {processedUsers.length === 0 && search.trim() && (
+          <p className="text-center text-slate-500 text-sm py-4">Foydalanuvchi topilmadi</p>
+        )}
         
-        {/* Chiqish tugmasi */}
+        {processedUsers.map((u) => {
+          const hasNotification = notifications?.[u._id]?.count > 0;
+          const isSelected = selectedUser?._id === u._id;
+
+          return (
+            <div
+              key={u._id}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setSelectedChat(selectedChat?._id === u._id ? null : u);
+              }}
+              onClick={() => {
+                setSelectedUser(u);
+                if (hasNotification) {
+                  setNotifications((prev) => ({
+                    ...prev,
+                    [u._id]: { count: 0, time: 0 },
+                  }));
+                }
+              }}
+              className={`group relative flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 border select-none
+                ${isSelected
+                  ? "bg-gradient-to-r from-blue-500/15 to-cyan-400/5 border-blue-500/20 shadow-md"
+                  : "border-transparent hover:bg-white/5"
+                }
+              `}
+            >
+              {/* AVATAR & STATUS */}
+              <div className="relative shrink-0">
+                <img
+                  src={u?.profilePic || "https://i.imgur.com/HeIi0wU.png"}
+                  alt=""
+                  className="w-12 h-12 md:w-13 md:h-13 rounded-xl object-cover"
+                />
+                <div className="absolute bottom-[-1px] right-[-1px] w-3.5 h-3.5 rounded-full bg-green-400 border-2 border-[#0e1621]" />
+              </div>
+
+              {/* USER INFO */}
+              <div className="flex-1 min-w-0">
+                <h3 className={`font-semibold text-sm truncate ${isSelected ? "text-blue-400" : "text-slate-200"}`}>
+                  {u?.username}
+                </h3>
+                <p className="text-xs text-slate-500 truncate mt-0.5">
+                  {search.trim() ? "Yangi suhbat boshlash" : "Suhbatni ochish..."}
+                </p>
+              </div>
+
+              {/* NOTIFICATION BADGE */}
+              {hasNotification && !isSelected && (
+                <div className="min-w-[20px] h-5 px-1.5 rounded-full bg-blue-500 text-white text-[11px] font-bold flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  {notifications[u._id].count}
+                </div>
+              )}
+
+              {/* TRASH / DELETE BUTTON */}
+              {selectedChat?._id === u._id && (
+                <button
+                  onClick={(e) => deleteChatHandler(e, u._id)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition active:scale-95 shadow-md shadow-red-500/20 z-10"
+                  title="Chatni o'chirish"
+                >
+                  <FiTrash2 className="text-sm" />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* LOGOUT BUTTON */}
+      <div className="p-3 shrink-0 border-t border-white/5">
         <button
-          onClick={handleLogout}
-          className="p-2 rounded-xl bg-white/5 hover:bg-red-500/20 text-white/60 hover:text-red-400 transition duration-150 active:scale-95"
-          title="Tizimdan chiqish"
+          onClick={logoutHandler}
+          className="w-full h-[48px] rounded-xl bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/10 transition-all duration-200 flex items-center justify-center gap-2 text-red-400 font-semibold text-sm active:scale-95"
         >
-          <FiLogOut className="text-lg" />
+          <FiLogOut className="text-base" />
+          <span>Chiqish</span>
         </button>
       </div>
 
-      {/* 2. QIDIRUV PANEL (SEARCH) */}
-      <div className="p-4 border-b border-white/5 bg-[#0e1621]">
-        <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-lg" />
-          <input
-            type="text"
-            placeholder="Qidirish..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-10 pl-10 pr-4 rounded-xl bg-[#17212b] border border-transparent focus:border-blue-500/50 outline-none text-sm transition placeholder:text-white/30"
-          />
-        </div>
-      </div>
-
-      {/* 3. CHATLAR VA FOYDALANUVCHILAR RO'YXATI */}
-      <div className="flex-1 overflow-y-auto divide-y divide-white/[0.02] scrollbar-thin">
-        {displayUsers.length === 0 ? (
-          <div className="p-6 text-center text-white/30 text-sm">
-            {searchQuery.trim() ? "Foydalanuvchi topilmadi" : "Hech qanday chat mavjud emas"}
-          </div>
-        ) : (
-          displayUsers.map((user) => {
-            const isSelected = selectedUser?._id === user._id;
-            const hasNotification = notifications.some((n) => String(n.sender) === String(user._id));
-
-            return (
-              <div
-                key={user._id}
-                onClick={() => handleSelectUser(user)}
-                className={`flex items-center gap-4 p-4 cursor-pointer transition-all duration-150 relative ${
-                  isSelected ? "bg-[#2b5278]" : "hover:bg-[#17212b]"
-                }`}
-              >
-                {/* PROFIL RASMI VA ONLAYN STATUS */}
-                <div className="relative flex-shrink-0">
-                  <img
-                    src={user.profilePic || "https://i.imgur.com/HeIi0wU.png"}
-                    alt={user.username}
-                    className="w-12 h-12 rounded-2xl object-cover border border-white/10"
-                  />
-                  {user.isOnline && (
-                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-[#0e1621]" />
-                  )}
-                </div>
-
-                {/* FOYDALANUVCHI NOMI VA BILDIRISHNOMA */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-sm truncate text-white">{user.username}</h3>
-                    {hasNotification && (
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse shadow-sm shadow-blue-500" />
-                    )}
-                  </div>
-                  <p className="text-xs text-white/40 truncate mt-0.5">
-                    {user.isOnline ? "onlayn" : "oflayn"}
-                  </p>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+      {/* PROFILE MODAL */}
+      {openProfile && (
+        <ProfileModal
+          open={openProfile}
+          setOpen={setOpenProfile}
+        />
+      )}
     </div>
   );
 }
