@@ -116,19 +116,17 @@ function Sidebar() {
 {/* h-[130px] pt-14 -> Hech qanday prefiksiz yozilgani uchun to'g'ridan-to'g'ri MOBILDA ishlaydi (Kattaroq joy ochdik)
   md:h-[96px] md:pt-4 -> Kompyuter (desktop) ekraniga o'tganda esa avtomatik eski holiga qaytadi
 */}
-      <div className="w-full h-[130px] pt-14 md:h-[96px] md:pt-6 px-6 flex items-center justify-between border-b border-white/5 shrink-0 select-none">
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-2xl font-black shadow-lg shadow-cyan-500/20 shrink-0">
-            N
-          </div>
-          <div className="shrink-0">
-            <h1 className="text-xl font-black tracking-wide bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-              NexChat
-            </h1>
-            <p className="text-xs text-slate-500 font-medium">Modern Messenger</p>
-          </div>
-        </div>
-      </div>
+      {/* LOGO QISMI */}
+<div className="flex justify-center mt-10 mb-10"> 
+  <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold text-white shadow-lg">
+    T
+  </div>
+</div>
+
+{/* TITLE (SARLAVHA) QISMI */}
+<h1 className="text-4xl font-bold text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+  Telegram
+</h1>
 
       {/* PROFILE CARD */}
       <div
