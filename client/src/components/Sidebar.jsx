@@ -117,18 +117,16 @@ function Sidebar() {
   md:h-[96px] md:pt-4 -> Kompyuter (desktop) ekraniga o'tganda esa avtomatik eski holiga qaytadi
 */}
       {/* LOGO QISMI */}
-{/* CHAT MENUSI YUQORI QISMI (HEADER) */}
-<div className="flex items-center gap-3 p-4 border-b border-slate-800">
-  {/* 1. Kichraytirilgan dumaloq logo (w-10 h-10 qilindi) */}
-  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-xl font-bold text-white shadow-md shrink-0">
+<div className="flex justify-center mt-15 mb-15"> 
+  <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold text-white shadow-lg">
     T
   </div>
-  
-  {/* 2. Kichraytirilgan va yoniga kelgan yozuv (text-xl qilindi) */}
-  <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-    Telegram
-  </h1>
 </div>
+
+{/* TITLE (SARLAVHA) QISMI */}
+<h1 className="text-4xl font-bold text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+  Telegram
+</h1>
 
       {/* PROFILE CARD */}
       <div
