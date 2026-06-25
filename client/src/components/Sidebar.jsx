@@ -36,6 +36,8 @@ function Sidebar() {
   }, [currentUser?._id]);
 
   // GLOBAL SEARCH
+// 1. Mavjud global qidiruv useEffect kodi
+  // 1. Global qidiruv effekti
   useEffect(() => {
     const searchGlobalUsers = async () => {
       if (!search.trim()) {
@@ -58,6 +60,22 @@ function Sidebar() {
     return () => clearTimeout(delayDebounceFn);
   }, [search, currentUser?._id]);
 
+
+  // 🔥 MUKAMMAL TUZATISH: Chatdan qaytganda klaviatura yopilishini kutib, keyin ekranni joyiga tushiradi
+  useEffect(() => {
+    if (!selectedUser) {
+      const timer = setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 250); // 250ms klaviatura yopilishi uchun yetarli vaqt
+
+      return () => clearTimeout(timer);
+    }
+  }, [selectedUser]);
+
+
+  // 2. Chatlarni saralash (useMemo)
   const processedUsers = useMemo(() => {
     if (search.trim()) {
       return searchResults;
@@ -69,11 +87,13 @@ function Sidebar() {
     });
   }, [users, search, searchResults, notifications]);
 
+  // 3. Chiqish funksiyasi
   const logoutHandler = useCallback(() => {
     localStorage.removeItem("userInfo");
     window.location.href = "/login";
   }, []);
 
+  // 4. Chatni o'chirish funksiyasi
   const deleteChatHandler = useCallback((e, userId) => {
     e.stopPropagation();
     const deletedChats = JSON.parse(localStorage.getItem("deletedChats")) || [];
@@ -87,32 +107,33 @@ function Sidebar() {
   }, [setSelectedUser]);
 
   return (
-    /* 📱 MOBIL UCHUN SEHRLI KLAS: 'h-screen' o'rniga 'h-[100dvh]' qo'yildi, bu mobil brauzerlardagi siqilishni butunlay yo'qotadi */
-    <div className={`w-full md:w-[360px] md:shrink-0 glass border-r border-white/5 flex flex-col h-[100dvh] bg-[#0e1621]/90 backdrop-blur-xl ${
+    <div className={`w-full md:w-[360px] md:shrink-0 glass border-r border-white/5 flex flex-col h-[100dvh] bg-[#0e1621]/90 backdrop-blur-xl overflow-hidden ${
       selectedUser ? "max-md:hidden" : "flex"
     }`}>
       
       {/* LOGO */}
-      {/* 🚀 shrink-0 va items-center orqali logo dizayni qat'iy simmetrik holatga keltirildi */}
-      <div className="h-[80px] px-6 flex items-center justify-between border-b border-white/5 shrink-0 select-none">
+     {/* LOGO BOX */}
+{/* h-[130px] pt-14 -> Hech qanday prefiksiz yozilgani uchun to'g'ridan-to'g'ri MOBILDA ishlaydi (Kattaroq joy ochdik)
+  md:h-[96px] md:pt-4 -> Kompyuter (desktop) ekraniga o'tganda esa avtomatik eski holiga qaytadi
+*/}
+      <div className="w-full h-[130px] pt-14 md:h-[96px] md:pt-4 px-6 flex items-center justify-between border-b border-white/5 shrink-0 select-none">
         <div className="flex items-center gap-3 shrink-0">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-xl font-black shadow-lg shadow-cyan-500/20 shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-2xl font-black shadow-lg shadow-cyan-500/20 shrink-0">
             N
           </div>
           <div className="shrink-0">
-            <h1 className="text-lg font-black tracking-wide bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+            <h1 className="text-xl font-black tracking-wide bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
               NexChat
             </h1>
-            <p className="text-[11px] text-slate-500 font-medium -mt-0.5">Modern Messenger</p>
+            <p className="text-xs text-slate-500 font-medium">Modern Messenger</p>
           </div>
         </div>
       </div>
 
       {/* PROFILE CARD */}
-      {/* 🚀 'flex-shrink-0' qo'shildi, endi u mutlaqo yuqoriga siqilib ketmaydi */}
       <div
         onClick={() => setOpenProfile(true)}
-        className="p-4 mx-2 mt-3 mb-1 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-white/5 transition duration-200 select-none group flex-shrink-0 bg-[#17212b]/20 border border-white/[0.02]"
+        className="p-4 mx-2 mt-4 mb-2 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-white/5 transition duration-200 select-none group flex-shrink-0 bg-[#17212b]/20 border border-white/[0.02]"
       >
         <img
           src={currentUser?.profilePic || "https://i.imgur.com/HeIi0wU.png"}
@@ -144,8 +165,7 @@ function Sidebar() {
       </div>
 
       {/* USERS / CHATS LIST */}
-      {/* 🚀 'space-y-1' o'rniga 'space-y-2.5' qilinganidan so'ng chatlar orasida ideal masofa paydo bo'ldi */}
-      <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-2.5 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-3.5 scrollbar-thin">
         {processedUsers.length === 0 && search.trim() && (
           <p className="text-center text-slate-500 text-sm py-4">Foydalanuvchi topilmadi</p>
         )}

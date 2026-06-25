@@ -6,7 +6,9 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import connectDB from "./config/db.js";
 
-import messageRoutes from "./routes/messageRoutes.js"; // qolgan routerlar ham shu yerda bo'ladi
+// ROUTERLAR IMPORTI
+import messageRoutes from "./routes/messageRoutes.js"; 
+import authRoutes from "./routes/authRoutes.js"; // 🔥 YANGI: Autentifikatsiya routeri qo'shildi
 
 dotenv.config();
 connectDB();
@@ -25,7 +27,9 @@ const io = new Server(httpServer, {
 // 🔥 IO ob'ektini controllerlar ishlata olishi uchun Express'ga bezaymiz
 app.set("io", io);
 
+// API YO'NALISHLARI (ROUTES)
 app.use("/api/messages", messageRoutes);
+app.use("/api/auth", authRoutes); // 🔥 YANGI: Ro'yxatdan o'tish va login so'rovlari uchun yo'l ochildi
 
 // SOCKET ULANISHI
 io.on("connection", (socket) => {
