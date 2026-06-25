@@ -116,7 +116,7 @@ function Sidebar() {
 {/* h-[130px] pt-14 -> Hech qanday prefiksiz yozilgani uchun to'g'ridan-to'g'ri MOBILDA ishlaydi (Kattaroq joy ochdik)
   md:h-[96px] md:pt-4 -> Kompyuter (desktop) ekraniga o'tganda esa avtomatik eski holiga qaytadi
 */}
-      <div className="w-full h-[130px] pt-14 md:h-[96px] md:pt-4 px-6 flex items-center justify-between border-b border-white/5 shrink-0 select-none">
+      <div className="w-full h-[130px] pt-18 md:h-[96px] md:pt-4 px-6 flex items-center justify-between border-b border-white/5 shrink-0 select-none">
         <div className="flex items-center gap-3 shrink-0">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-2xl font-black shadow-lg shadow-cyan-500/20 shrink-0">
             N
