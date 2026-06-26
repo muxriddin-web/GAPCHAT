@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
+import logo from "../assets/logo.png";
 import API from "../api/axios";
 
 function Register() {
@@ -81,17 +81,18 @@ function Register() {
       <div className="w-full max-w-md bg-[#111827] border border-gray-800 rounded-3xl p-8 shadow-2xl">
 
         {/* LOGO */}
-        <div className="flex justify-center mb-4">
-
-          <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold text-white shadow-lg">
-            T
-          </div>
-
+        {/* LOGO QISMI */}
+        <div className="flex justify-center mt-6 mb-4 pt-4">
+          <img 
+            src={logo} 
+            alt="GAP Chat Logo" 
+            className="w-24 h-24 object-contain drop-shadow-[0_10px_10px_rgba(0,180,216,0.3)]"
+          />
         </div>
 
-        {/* TITLE */}
-        <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-          Telegram
+        {/* SARLAVHA (Yozuvni ham Telegram'dan GAP'ga o'zgartiramiz) */}
+        <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-6">
+          GAP
         </h1>
 
         <p className="text-center text-gray-400 mt-3">

@@ -3,7 +3,7 @@ import ProfileModal from "./ProfileModal";
 import { FiLogOut, FiSearch, FiTrash2 } from "react-icons/fi";
 import API from "../api/axios";
 import { useChat } from "../context/ChatContext"; // 🚀 1. Global Context ulandi
-
+import logo from "../assets/logo.png";
 function Sidebar() { 
   // 🚀 2. Prop-drilling olib tashlandi. Kerakli statelar to'g'ridan-to'g'ri markazdan olinadi
   const { selectedUser, setSelectedUser, notifications = {}, setNotifications } = useChat();
@@ -117,16 +117,19 @@ function Sidebar() {
   md:h-[96px] md:pt-4 -> Kompyuter (desktop) ekraniga o'tganda esa avtomatik eski holiga qaytadi
 */}
       {/* LOGO QISMI */}
-<div className="flex justify-center mt-15 mb-15"> 
-  <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold text-white shadow-lg">
-    T
-  </div>
-</div>
 
-{/* TITLE (SARLAVHA) QISMI */}
-<h1 className="text-4xl font-bold text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-  Telegram
-</h1>
+{/* CHAT MENUSI YUQORI QISMI (HEADER) */}
+<div className="flex items-center gap-3 p-4 border-b border-slate-800">
+  <img 
+    src={logo} 
+    alt="GAP Chat Logo" 
+    className="w-10 h-10 object-contain shrink-0 animate-pulse-slow"
+  />
+  
+  <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+    GAP Chat
+  </h1>
+</div>
 
       {/* PROFILE CARD */}
       <div
