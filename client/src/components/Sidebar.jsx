@@ -3,7 +3,7 @@ import ProfileModal from "./ProfileModal";
 import { FiLogOut, FiSearch, FiTrash2 } from "react-icons/fi";
 import API from "../api/axios";
 import { useChat } from "../context/ChatContext"; // 🚀 1. Global Context ulandi
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.png"; // Rasmingiz turgan joyga qarab yo'lini tekshirib oling
 function Sidebar() { 
   // 🚀 2. Prop-drilling olib tashlandi. Kerakli statelar to'g'ridan-to'g'ri markazdan olinadi
   const { selectedUser, setSelectedUser, notifications = {}, setNotifications } = useChat();
@@ -117,19 +117,19 @@ function Sidebar() {
   md:h-[96px] md:pt-4 -> Kompyuter (desktop) ekraniga o'tganda esa avtomatik eski holiga qaytadi
 */}
       {/* LOGO QISMI */}
-
-{/* CHAT MENUSI YUQORI QISMI (HEADER) */}
-<div className="flex items-center gap-3 p-4 border-b border-slate-800">
+{/* LOGO QISMI */}
+<div className="flex justify-center mt-12 mb-8"> 
   <img 
     src={logo} 
-    alt="GAP Chat Logo" 
-    className="w-10 h-10 object-contain shrink-0 animate-pulse-slow"
+    alt="GAP Logo" 
+    className="w-28 h-28 object-contain drop-shadow-[0_10px_15px_rgba(0,180,216,0.2)]" 
   />
-  
-  <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-    GAP Chat
-  </h1>
 </div>
+
+{/* TITLE (SARLAVHA) QISMI */}
+<h1 className="text-4xl font-bold text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+  GAP
+</h1>
 
       {/* PROFILE CARD */}
       <div
