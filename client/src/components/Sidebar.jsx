@@ -117,7 +117,7 @@ function Sidebar() {
   md:h-[96px] md:pt-4 -> Kompyuter (desktop) ekraniga o'tganda esa avtomatik eski holiga qaytadi
 */}
       {/* LOGO QISMI */}
-<div className="flex justify-center" style="margin-top: 15%;"> 
+<div className="flex justify-center mt-15 mb-15"> 
   <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold text-white shadow-lg">
     T
   </div>
