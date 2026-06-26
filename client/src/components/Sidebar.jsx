@@ -128,7 +128,7 @@ function Sidebar() {
 
 {/* TITLE (SARLAVHA) QISMI */}
 <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-  GAP
+  Gapchat
 </h1>
 
       {/* PROFILE CARD */}
