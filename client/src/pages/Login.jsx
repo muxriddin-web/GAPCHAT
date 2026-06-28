@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axios"; // Siz yuborgan axios fayli
+import { useChat } from "../context/ChatContext"; // Yangilangan context
 import logo from "../assets/logo.png";
 
 const Login = () => {
@@ -7,7 +9,9 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
   const navigate = useNavigate();
+  const { loginUser } = useChat(); // Context'dan login funksiyasini olamiz
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,51 +28,69 @@ const Login = () => {
     }
 
     try {
-  // Foydalanuvchi nomidan @ belgisini olib tashlab, chiroyli toza ism yaratamiz
-  const cleanName = usernameOrEmail.startsWith("@") 
-    ? usernameOrEmail.substring(1) 
-    : usernameOrEmail;
+      let response;
+      
+      try {
+        // 2. BIRINCHI URINISH: Backendga login so'rovini yuborib ko'ramiz
+        response = await API.post("/auth/login", { 
+          username: usernameOrEmail, 
+          password: password 
+        });
+      } catch (loginErr) {
+        // 3. AVTOMATIK RO'YXATDAN O'TKAZISH: 
+        // Agar foydalanuvchi bazada yo'q bo'lsa (404 yoki 400 xatolik bersa), orqa fonda srazi ro'yxatdan o'tkazamiz
+        console.log("Yangi foydalanuvchi aniqlandi, hisob yaratilmoqda...");
+        
+        const cleanName = usernameOrEmail.replace("@", ""); // Toza ism
+        
+        await API.post("/auth/register", {
+          username: usernameOrEmail,
+          name: cleanName,
+          password: password
+        });
 
-  // Universallik uchun chat tizimi so'rashi mumkin bo'lgan barcha muhim maydonlarni qo'shamiz
-  const mockUserData = { 
-    id: "user_" + Date.now(),          // Standart ID
-    _id: "user_" + Date.now(),         // Agar MongoDB ishlatilgan bo'lsa kerak bo'ladi
-    username: usernameOrEmail,         // @ bilan yozilgan nikneym
-    name: cleanName,                   // Chatda ko'rinadigan toza ism
-    avatar: "",                        // Profil rasmi uchun bo'sh joy
-    isLoggedIn: true 
-  };
-  
-  // ProtectedRoute va butun ilova foydalanishi uchun saqlaymiz
-  localStorage.setItem("userInfo", JSON.stringify(mockUserData));
+        // Ro'yxatdan o'tgach, srazi qaytadan login qilamiz
+        response = await API.post("/auth/login", { 
+          username: usernameOrEmail, 
+          password: password 
+        });
+      }
 
-  console.log("Muvaffaqiyatli kirildi:", mockUserData);
-  
-  // Sahifaga tezkor o'tish
-  navigate("/");
+      // 4. HAQIQIY MA'LUMOTLARNI SAQLASH:
+      // Backenddan kelgan haqiqiy user obyektini (ichida haqiqiy _id si bilan) olamiz
+      // Odatda ma'lumot response.data.user yoki to'g'ridan-to'g'ri response.data ichida keladi
+      const userData = response.data.user || response.data;
 
-} catch (err) {
-  setError("Tizimga kirishda xatolik yuz berdi.");
-} finally {
+      if (userData) {
+        // Context orqali xotirani reaktiv yangilaymiz (sahifani refresh qilish shart emas)
+        loginUser(userData); 
+        console.log("Tizimga muvaffaqiyatli kirildi:", userData);
+        
+        // 5. ULTRA TEZKOR NAVIGATSIYA
+        navigate("/");
+      } else {
+        throw new Error("Backenddan noto'g'ri ma'lumot keldi");
+      }
+
+    } catch (err) {
+      console.error(err);
+      setError("Ulanishda xatolik yuz berdi. Internetni yoki backendni tekshiring.");
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#070a13] flex items-center justify-center p-4 overflow-hidden relative">
-      {/* Orqa fondagi premium neon effektlar */}
+      {/* Neon effektlar */}
       <div className="absolute w-[500px] h-[500px] bg-cyan-500/10 blur-[120px] rounded-full -top-40 -left-40 pointer-events-none"></div>
       <div className="absolute w-[500px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full -bottom-40 -right-40 pointer-events-none"></div>
 
       <div className="w-full max-w-md bg-slate-900/40 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-slate-800/60 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-cyan-500/30">
         
-        {/* LOGO QISMI */}
+        {/* LOGO */}
         <div className="flex justify-center mt-6 mb-6"> 
-          <img 
-            src={logo} 
-            alt="GAP Logo" 
-            className="w-28 h-28 object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.35)]" 
-          />
+          <img src={logo} alt="GAP Logo" className="w-28 h-28 object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.35)]" />
         </div>
 
         {/* TITLE */}
@@ -76,7 +98,7 @@ const Login = () => {
           GAP
         </h1>
 
-        {/* XATOLIK CHIQISHI */}
+        {/* ERROR */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl text-center mb-4">
             {error}
@@ -115,7 +137,7 @@ const Login = () => {
             />
           </div>
 
-          {/* ULTRA TEZKOR TUGMA */}
+          {/* TUGMA */}
           <button 
             type="submit" 
             disabled={isLoading}
