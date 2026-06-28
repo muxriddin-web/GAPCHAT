@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  // Skrinshotingizdan aniqlangan backend bazaviy URL manzili
-  baseURL: import.meta.env.VITE_API_URL || "https://gapchat.onrender.com/api",
+  baseURL: "https://gapchat.onrender.com/api", // Oxirida /api bo'lishi shart!
 });
 
 // 🚀 HAR QANDAY SO'ROV KETISHDAN OLDIN TOKENNI DINAMIK QO'SHISH (INTERCEPTOR)
