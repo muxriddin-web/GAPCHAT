@@ -26,7 +26,13 @@ const Login = () => {
       return;
     }
 
-    // 🚀 BACKEND ENDPOINTLAR RO'YXATI (Sizda asosiysi /auth/login ekanligi aniqlandi)
+    // 🚀 AVTOMATIK TUZATUVCHI (Kafolat): 
+    // Agar terminal .env o'zgarganini unutgan bo'lsa, axios manzilini majburlab to'g'rilaymiz
+    if (!API.defaults.baseURL || !API.defaults.baseURL.includes("/api")) {
+      API.defaults.baseURL = "https://gapchat.onrender.com/api";
+    }
+
+    // 🚀 BACKEND ENDPOINTLAR RO'YXATI
     const candidateRoutes = [
       { login: "/auth/login", register: "/auth/register" },       
       { login: "/users/auth", register: "/users" },               
@@ -42,8 +48,7 @@ const Login = () => {
 
     // Skanerlash sikli
     for (const route of candidateRoutes) {
-      // BaseURL oxirida /api borligini va so'rov to'g'ri ketayotganini kafolatlaymiz
-      const currentBase = API.defaults.baseURL || "https://gapchat.onrender.com/api";
+      const currentBase = API.defaults.baseURL;
       const currentFullUrl = currentBase + route.login;
       
       try {
@@ -55,13 +60,13 @@ const Login = () => {
         isSuccess = true;
         break; 
       } catch (loginErr) {
-        // Agar login xato bo'lsa va 404 qaytmasa (ya'ni 400 yoki 401 parol xato/user yo'q bo'lsa), ro'yxatdan o'tkazamiz
+        // Agar 404 bo'lsa, keyingi endpointni tekshirish
         if (loginErr.response?.status === 404) {
           lastTechnicalError = `404 -> ${currentFullUrl}`;
-          continue; // Keyingi endpointni tekshirish
+          continue; 
         }
 
-        // 2. Avtomatik ro'yxatdan o'tkazish urinishi
+        // 2. Avtomatik ro'yxatdan o'tkazish urinishi (400 yoki 401 bo'lsa)
         try {
           const cleanName = usernameOrEmail.replace("@", "");
           await API.post(route.register, {
@@ -89,7 +94,7 @@ const Login = () => {
         const userData = response.data.user || response.data;
         
         if (userData) {
-          // Tokenni dinamik ushlab qolamiz (F5 muammosini yo'qotish uchun)
+          // Tokenni dinamik ushlab qolamiz (F5 muammosini butkul yo'qotish uchun)
           const activeToken = userData.token || userData.user?.token;
           if (activeToken) {
             API.defaults.headers.common["Authorization"] = `Bearer ${activeToken}`;
@@ -104,7 +109,7 @@ const Login = () => {
           throw new Error("Backend kutilmagan formatda ma'lumot qaytardi.");
         }
       } else {
-        setError(`Backend API manzili mos kelmadi!\n\nOxirgi urinish: ${lastTechnicalError}\n\nIltimos, .env yoki axios.js faylida baseURL oxiriga "/api" yozilganini tekshiring!`);
+        setError(`Backend API manzili mos kelmadi!\n\nOxirgi urinish: ${lastTechnicalError}\n\n💡 Maslahat: Iltimos terminalni Ctrl+C qilib, qayta npm run dev qiling.`);
       }
     } catch (finalErr) {
       setError(finalErr.message);
