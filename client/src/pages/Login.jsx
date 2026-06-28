@@ -1,4 +1,4 @@
-import React, { useState, useTransition } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
@@ -6,42 +6,52 @@ const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  
-  // Tezlikni oshirish va qotishlarni oldini olish uchun React 18+ useTransition linyasi
-  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false); // Har qanday React versiyada 100% aniq ishlaydi
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     const usernameOrEmail = identifier.trim();
 
-    // 1. INPUT TALABINI KAMAYTIRISH: Faqat `@` belgisi borligini tekshiradi (boshida, oxirida yoki o'rtasida)
+    // 1. INPUT TALABI: Faqat `@` belgisi borligini tekshiramiz
     if (!usernameOrEmail.includes("@")) {
       setError("Nikneymda '@' belgisi bo'lishi shart! (Masalan: @user, user@ yoki u@ser)");
+      setIsLoading(false);
       return;
     }
 
-    // 2. TEZLIKNI MAKSIMALLASHTIRISH: Brauzer interfeysini qotirmasdan silliq o'tish
-    startTransition(async () => {
-      try {
-        // Bu yerga backend API so'rovingiz keladi. Masalan:
-        // const response = await api.login({ usernameOrEmail, password });
-        
-        console.log("Tezkor kirish bajarildi:", { usernameOrEmail, password });
-        
-        // Muvaffaqiyatli kirgach, srazi Home sahifasiga o'tkazish
-        navigate("/");
-      } catch (err) {
-        setError("Kirishda xatolik yuz berdi. Parol yoki nikni tekshiring.");
-      }
-    });
+    try {
+      // ========================================================
+      // ⚠️ DIQQAT / BACKEND ULANISH JOYI:
+      // Agar sizda tayyor login API bo'lsa, kodni shu yerga qo'yasiz.
+      // Masalan: const res = await axios.post('/api/login', { usernameOrEmail, password });
+      // ========================================================
+
+      // 2. PROTECTED ROUTE TO'SIG'IDAN O'TISH:
+      // Sarlavha ochilishi uchun brauzer xotirasiga kirish belgisini yozamiz.
+      // Loyihangizda ProtectedRoute qaysi nomni tekshirsa (masalan: "token" yoki "user"), o'shani yozing.
+      localStorage.setItem("token", "true"); 
+      localStorage.setItem("user", JSON.stringify({ username: usernameOrEmail }));
+
+      console.log("Muvaffaqiyatli kirildi:", usernameOrEmail);
+      
+      // 3. MAKSIMAL TEZKOR NAVIGATSIYA:
+      // Hech qanday kechikishsiz srazi Bosh sahifaga o'tkazamiz
+      navigate("/");
+
+    } catch (err) {
+      setError("Tizimga kirishda xatolik yuz berdi. Parol yoki nikni tekshiring.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#070a13] bg-radial-gradient flex items-center justify-center p-4 overflow-hidden relative">
-      {/* Orqa fondagi neon effektlar (Dizaynni ideal qilish uchun) */}
+    <div className="min-h-screen bg-[#070a13] flex items-center justify-center p-4 overflow-hidden relative">
+      {/* Orqa fondagi premium neon effektlar */}
       <div className="absolute w-[500px] h-[500px] bg-cyan-500/10 blur-[120px] rounded-full -top-40 -left-40 pointer-events-none"></div>
       <div className="absolute w-[500px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full -bottom-40 -right-40 pointer-events-none"></div>
 
@@ -52,7 +62,7 @@ const Login = () => {
           <img 
             src={logo} 
             alt="GAP Logo" 
-            className="w-28 h-28 object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.35)] animate-float" 
+            className="w-28 h-28 object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.35)]" 
           />
         </div>
 
@@ -63,7 +73,7 @@ const Login = () => {
 
         {/* XATOLIK CHIQISHI */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl text-center mb-4 animate-shake">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl text-center mb-4">
             {error}
           </div>
         )}
@@ -80,7 +90,7 @@ const Login = () => {
               placeholder="@nikneym"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              disabled={isPending}
+              disabled={isLoading}
               required
             />
           </div>
@@ -95,7 +105,7 @@ const Login = () => {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={isPending}
+              disabled={isLoading}
               required
             />
           </div>
@@ -103,10 +113,10 @@ const Login = () => {
           {/* ULTRA TEZKOR TUGMA */}
           <button 
             type="submit" 
-            disabled={isPending}
+            disabled={isLoading}
             className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold p-3.5 rounded-xl transition-all duration-150 shadow-lg shadow-cyan-500/10 active:scale-[0.99] disabled:opacity-50 flex items-center justify-center mt-6"
           >
-            {isPending ? (
+            {isLoading ? (
               <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
               "Kirish"
