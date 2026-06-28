@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef } from "react";
-import socket from "../socket"; // mavjud socket instansingiz
+import socket from "../socket"; 
 import API from "../api/axios";
 
 const ChatContext = createContext();
@@ -8,30 +8,79 @@ export const ChatProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const currentUser = JSON.parse(localStorage.getItem("userInfo"));
+  
+  // 1. CHATLAR RO'YXATI STATE: Sidebar chatlarini shu yerda saqlab, saralaymiz
+  const [chats, setChats] = useState([]);
 
-  // Stale closure (eski yopilish) muammosini ref orqali hal qilamiz
+  // 2. REAKTIV FOYDALANUVCHI: Login bo'lishi bilan tizim srazi tanishi uchun state qildik
+  const [currentUser, setCurrentUser] = useState(() => 
+    JSON.parse(localStorage.getItem("userInfo"))
+  );
+
   const selectedUserRef = useRef(selectedUser);
   useEffect(() => {
     selectedUserRef.current = selectedUser;
   }, [selectedUser]);
 
-  // Global socket tinglovchisi (Ilova ochiq tursa doim ishlaydi)
+  // Login bo'lganda foydalanuvchini yangilash funksiyasi
+  const loginUser = (userData) => {
+    localStorage.setItem("userInfo", JSON.stringify(userData));
+    setCurrentUser(userData);
+  };
+
+  // Foydalanuvchilar/Chatlar ro'yxatini yuklash (Sidebar uchun)
+  useEffect(() => {
+    if (!currentUser?._id) return;
+    
+    const fetchChats = async () => {
+      try {
+        const { data } = await API.get(`/users/${currentUser._id}`); // Backenddagi foydalanuvchilar yo'li
+        setChats(data);
+      } catch (error) {
+        console.error("Chatlarni yuklashda xatolik:", error);
+      }
+    };
+    fetchChats();
+  }, [currentUser?._id]);
+
+  // Global socket tinglovchisi
   useEffect(() => {
     if (!socket || !currentUser?._id) return;
+
+    // Smeshni ulash (Soket serverga foydalanuvchi ID sini bildirish)
+    socket.emit("join", currentUser._id);
 
     const handleReceiveMessage = (newMessage) => {
       const incomingSenderId = newMessage.sender?._id || newMessage.sender;
       const activeChatUser = selectedUserRef.current;
 
-      // 1. Agar xabar kelgan paytda aynan o'sha odam bilan chat ochiq bo'lsa
+      // 🔊 BILDIRISHNOMA OVOZI: Har qanday yangi xabar kelganda ovoz chalish
+      try {
+        const audio = new Audio("/notification.mp3"); // public/notification.mp3 fayli bo'lishi kerak
+        audio.play().catch(e => console.log("Ovoz chalishda xatolik:", e));
+      } catch (err) {
+        console.error(err);
+      }
+
+      // 🔄 CHATNI ENGP TEPAGA KO'TARISH (SORTING LOGIKASI)
+      setChats((prevChats) => {
+        const filtered = prevChats.filter(c => String(c._id) !== String(incomingSenderId));
+        const targetChat = prevChats.find(c => String(c._id) === String(incomingSenderId));
+        
+        if (targetChat) {
+          // Xabar kelgan chatni ro'yxat boshiga qo'yamiz
+          return [targetChat, ...filtered];
+        }
+        return prevChats;
+      });
+
+      // 💬 XABAR VA BILDIRISHLARNI TAQSIMLASH
       if (activeChatUser && String(incomingSenderId) === String(activeChatUser._id)) {
         setMessages((prev) => {
           if (prev.some((m) => String(m._id) === String(newMessage._id))) return prev;
           return [...prev, newMessage];
         });
       } else {
-        // 2. Agar chat yopiq bo'lsa yoki boshqa odam yozgan bo'lsa (Unga sahifani refresh qilish shart emas!)
         setNotifications((prev) => {
           if (prev.some((n) => String(n._id) === String(newMessage._id))) return prev;
           return [newMessage, ...prev];
@@ -46,7 +95,7 @@ export const ChatProvider = ({ children }) => {
     };
   }, [currentUser?._id]);
 
-  // Chat ochilganda xabarlarni bazadan yuklash funksiyasi
+  // Chat ochilganda xabarlarni yuklash
   useEffect(() => {
     if (!selectedUser?._id || !currentUser?._id) {
       setMessages([]);
@@ -57,6 +106,9 @@ export const ChatProvider = ({ children }) => {
       try {
         const { data } = await API.get(`/messages/${currentUser._id}/${selectedUser._id}`);
         setMessages(data);
+        
+        // O'qilgan chat bildirishnomalarini o'chirib tashlash
+        setNotifications((prev) => prev.filter(n => String(n.sender?._id || n.sender) !== String(selectedUser._id)));
       } catch (error) {
         console.error("Xabarlarni yuklashda xatolik:", error);
       }
@@ -68,7 +120,9 @@ export const ChatProvider = ({ children }) => {
     <ChatContext.Provider value={{
       messages, setMessages,
       notifications, setNotifications,
-      selectedUser, setSelectedUser
+      selectedUser, setSelectedUser,
+      chats, setChats,
+      currentUser, loginUser // Login uchun kerakli funksiyalar
     }}>
       {children}
     </ChatContext.Provider>

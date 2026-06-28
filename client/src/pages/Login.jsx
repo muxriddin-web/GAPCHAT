@@ -24,28 +24,32 @@ const Login = () => {
     }
 
     try {
-      // ========================================================
-      // ⚠️ TAYYOR BACKEND APINGIZ BO'LSA, KODNI SHU YERGA QO'YASIZ.
-      // Masalan: const res = await axios.post('/api/login', { usernameOrEmail, password });
-      // ========================================================
+  // Foydalanuvchi nomidan @ belgisini olib tashlab, chiroyli toza ism yaratamiz
+  const cleanName = usernameOrEmail.startsWith("@") 
+    ? usernameOrEmail.substring(1) 
+    : usernameOrEmail;
 
-      // 2. MUHIM JOYI: ProtectedRoute aynan shu "userInfo" kalitini kutyapti!
-      // Foydalanuvchi ma'lumotlarini ob'ekt ko'rinishida saqlaymiz
-      const mockUserData = { 
-        username: usernameOrEmail,
-        isLoggedIn: true 
-      };
-      
-      localStorage.setItem("userInfo", JSON.stringify(mockUserData));
+  // Universallik uchun chat tizimi so'rashi mumkin bo'lgan barcha muhim maydonlarni qo'shamiz
+  const mockUserData = { 
+    id: "user_" + Date.now(),          // Standart ID
+    _id: "user_" + Date.now(),         // Agar MongoDB ishlatilgan bo'lsa kerak bo'ladi
+    username: usernameOrEmail,         // @ bilan yozilgan nikneym
+    name: cleanName,                   // Chatda ko'rinadigan toza ism
+    avatar: "",                        // Profil rasmi uchun bo'sh joy
+    isLoggedIn: true 
+  };
+  
+  // ProtectedRoute va butun ilova foydalanishi uchun saqlaymiz
+  localStorage.setItem("userInfo", JSON.stringify(mockUserData));
 
-      console.log("Muvaffaqiyatli kirildi:", usernameOrEmail);
-      
-      // 3. MAKSIMAL TEZKOR NAVIGATSIYA: Bosh sahifaga uchamiz!
-      navigate("/");
+  console.log("Muvaffaqiyatli kirildi:", mockUserData);
+  
+  // Sahifaga tezkor o'tish
+  navigate("/");
 
-    } catch (err) {
-      setError("Tizimga kirishda xatolik yuz berdi. Parol yoki nikni tekshiring.");
-    } finally {
+} catch (err) {
+  setError("Tizimga kirishda xatolik yuz berdi.");
+} finally {
       setIsLoading(false);
     }
   };
