@@ -26,13 +26,12 @@ const Login = () => {
       return;
     }
 
-    // 🚀 AVTOMATIK TUZATUVCHI (Kafolat): 
-    // Agar terminal .env o'zgarganini unutgan bo'lsa, axios manzilini majburlab to'g'rilaymiz
+    // Hostingda muammo bo'lmasligi uchun API manzilini qat'iy tekshiramiz
     if (!API.defaults.baseURL || !API.defaults.baseURL.includes("/api")) {
       API.defaults.baseURL = "https://gapchat.onrender.com/api";
     }
 
-    // 🚀 BACKEND ENDPOINTLAR RO'YXATI
+    // Mumkin bo'lgan barcha backend yo'llari
     const candidateRoutes = [
       { login: "/auth/login", register: "/auth/register" },       
       { login: "/users/auth", register: "/users" },               
@@ -44,48 +43,70 @@ const Login = () => {
 
     let response = null;
     let isSuccess = false;
-    let lastTechnicalError = "";
+    let finalErrorMessage = "";
 
-    // Skanerlash sikli
+    // Har qanday backend modeliga mos tushishi uchun universal obyektlar
+    const authPayload = { 
+      username: usernameOrEmail, 
+      email: usernameOrEmail, 
+      password 
+    };
+
+    const cleanName = usernameOrEmail.replace("@", "");
+    const registerPayload = {
+      username: usernameOrEmail,
+      email: usernameOrEmail,
+      name: cleanName,
+      password: password
+    };
+
+    // 🚀 ZARGARLIK SIKLI
     for (const route of candidateRoutes) {
-      const currentBase = API.defaults.baseURL;
-      const currentFullUrl = currentBase + route.login;
-      
       try {
-        // 1. Loginga so'rov
-        response = await API.post(route.login, { 
-          username: usernameOrEmail, 
-          password 
-        });
+        // 1. Loginga urinib ko'ramiz
+        response = await API.post(route.login, authPayload);
         isSuccess = true;
-        break; 
+        break; // Agar login o'xshasa, sikldan darhol chiqamizek!
       } catch (loginErr) {
-        // Agar 404 bo'lsa, keyingi endpointni tekshirish
-        if (loginErr.response?.status === 404) {
-          lastTechnicalError = `404 -> ${currentFullUrl}`;
-          continue; 
+        const status = loginErr.response?.status;
+        const resData = loginErr.response?.data;
+
+        // Express serverining standart HTML "Cannot POST" xatosi bormi?
+        const isHtmlResponse = typeof resData === "string" && (resData.includes("<!DOCTYPE") || resData.includes("Cannot POST"));
+        const isRouteNotFound = status === 404 && (isHtmlResponse || !resData);
+
+        if (isRouteNotFound) {
+          // Bu shunchaki noto'g'ri endpoint. Keyingi nomzod yo'lga o'tamiz.
+          continue;
         }
 
-        // 2. Avtomatik ro'yxatdan o'tkazish urinishi (400 yoki 401 bo'lsa)
-        try {
-          const cleanName = usernameOrEmail.replace("@", "");
-          await API.post(route.register, {
-            username: usernameOrEmail,
-            name: cleanName,
-            password: password
-          });
+        // 🎯 TAPDIL! Agar bu yerga keldikmi, demak ENDPOINT TO'G'RI, shunchaki login rad etildi!
+        // Sababi: foydalanuvchi bazada yo'q (404 JSON yoki 400 keladi)
+        if (status === 404 || status === 400) {
+          try {
+            // Avtomatik ro'yxatdan o'tkazamiz
+            await API.post(route.register, registerPayload);
 
-          // Ro'yxatdan o'tgach qayta login
-          response = await API.post(route.login, { 
-            username: usernameOrEmail, 
-            password 
-          });
-          isSuccess = true;
-          break;
-        } catch (regErr) {
-          lastTechnicalError = regErr.response?.data?.message || regErr.message;
-          continue; 
+            // Ro'yxatdan o'tishi bilan srazi qayta login qilamiz
+            response = await API.post(route.login, authPayload);
+            isSuccess = true;
+            break; // Muvaffaqiyatli! Siklni to'xtatamiz
+          } catch (regErr) {
+            // Agar ro'yxatdan o'tishda backend xato bersa (masalan: "Parol juda qisqa")
+            finalErrorMessage = regErr.response?.data?.message || regErr.response?.data?.error || "Ro'yxatdan o'tishda xatolik.";
+            break; // To'g'ri yo'lda turgandik, boshqa yo'llarni qidirish shart emas, to'xtaymiz!
+          }
         }
+
+        // Agar xatolik 401 bo'lsa (ya'ni parol xato bo'lsa)
+        if (status === 401) {
+          finalErrorMessage = resData?.message || resData?.error || "Kiritilgan parol noto'g'ri!";
+          break; // To'g'ri yo'ldamiz, shunchaki parol xato. Siklni to'xtatamiz.
+        }
+
+        // Boshqa har qanday kutilmagan backend xatoligi uchun
+        finalErrorMessage = resData?.message || loginErr.message;
+        break;
       }
     }
 
@@ -94,7 +115,6 @@ const Login = () => {
         const userData = response.data.user || response.data;
         
         if (userData) {
-          // Tokenni dinamik ushlab qolamiz (F5 muammosini butkul yo'qotish uchun)
           const activeToken = userData.token || userData.user?.token;
           if (activeToken) {
             API.defaults.headers.common["Authorization"] = `Bearer ${activeToken}`;
@@ -109,7 +129,7 @@ const Login = () => {
           throw new Error("Backend kutilmagan formatda ma'lumot qaytardi.");
         }
       } else {
-        setError(`Backend API manzili mos kelmadi!\n\nOxirgi urinish: ${lastTechnicalError}\n\n💡 Maslahat: Iltimos terminalni Ctrl+C qilib, qayta npm run dev qiling.`);
+        setError(finalErrorMessage || "Backend server bilan bog'lanib bo'lmadi. Iltimos, internetingizni tekshiring.");
       }
     } catch (finalErr) {
       setError(finalErr.message);
