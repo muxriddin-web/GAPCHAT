@@ -26,12 +26,13 @@ const Login = () => {
       return;
     }
 
-    // Backendda bo'lishi mumkin bo'lgan barcha an'anaviy auth yo'llari kombinatsiyasi
+    // Node.js/Express backendlarida uchraydigan barcha real kombinatsiyalar listi
     const candidateRoutes = [
       { login: "/auth/login", register: "/auth/register" },
+      { login: "/auth", register: "/users" },              // 🚀 Mashhur variant (Direct Auth)
+      { login: "/users/login", register: "/users" },        // 🚀 Mashhur variant 2
       { login: "/users/login", register: "/users/register" },
       { login: "/user/login", register: "/user/register" },
-      { login: "/users/login", register: "/users" },
       { login: "/login", register: "/register" }
     ];
 
@@ -39,21 +40,25 @@ const Login = () => {
     let isSuccess = false;
     let lastTechnicalError = "";
 
-    // Aqlli skanerlash sikli
+    // Avtomatik mos keladigan backend yo'lini skanerlash
     for (const route of candidateRoutes) {
+      // Hozirgi urinishdagi to'liq URL manzilini hisoblaymiz (baza URL + endpoint)
+      const currentFullUrl = (API.defaults.baseURL || "") + route.login;
+      
       try {
         // 1. Login qilib ko'ramiz
         response = await API.post(route.login, { username: usernameOrEmail, password });
         isSuccess = true;
         break; 
       } catch (loginErr) {
-        // Agar 404 (Topilmadi) bo'lsa, demak backend yo'li boshqacha, keyingi kombinatsiyaga o'tamiz
+        // Agar endpoint umuman mavjud bo'lmasa (404), keyingi kombinatsiyaga o'tamiz
         if (loginErr.response?.status === 404) {
-          lastTechnicalError = `Route ${route.login} mavjud emas (404)`;
+          lastTechnicalError = `Topilmadi (404): ${currentFullUrl}`;
           continue;
         }
 
-        // 2. Agar foydalanuvchi bazada bo'lmasa (400, 401 yoki xabar orqali), uni orqa fonda srazi yaratamiz
+        // 2. Agar login 404 bo'lmasa (masalan, 400 yoki 401 - foydalanuvchi topilmadi bo'lsa), demak endpoint to'g'ri!
+        // Shuning uchun orqa fonda srazi ro'yxatdan o'tkazishga urinamiz
         try {
           const cleanName = usernameOrEmail.replace("@", "");
           await API.post(route.register, {
@@ -62,13 +67,14 @@ const Login = () => {
             password: password
           });
 
-          // Ro'yxatdan muvaffaqiyatli o'tgach, srazi qayta login qilamiz
+          // Ro'yxatdan o'tgach, srazi login qilamiz
           response = await API.post(route.login, { username: usernameOrEmail, password });
           isSuccess = true;
           break;
         } catch (regErr) {
-          lastTechnicalError = regErr.response?.data?.message || regErr.message;
-          continue; // Keyingi kombinatsiyaga o'tish
+          const regUrl = (API.defaults.baseURL || "") + route.register;
+          lastTechnicalError = regErr.response?.data?.message || `Xatolik: ${regUrl}`;
+          continue; 
         }
       }
     }
@@ -82,11 +88,11 @@ const Login = () => {
           console.log("Muvaffaqiyatli ulanish:", userData);
           navigate("/");
         } else {
-          throw new Error("Backenddan kutilmagan formatda ma'lumot keldi.");
+          throw new Error("Backend tizimi kutilmagan formatda ma'lumot qaytardi.");
         }
       } else {
-        // Agar biror bir endpoint javob bermasa, real xatolikni yuzaga chiqaramiz
-        setError(`Backend bilan bog'lanib bo'lmadi. Texnik xato: ${lastTechnicalError || "Ulanish rad etildi"}`);
+        // Agar barcha endpointlar 404 bersa, ekranga to'liq URLni chiqarib beradi
+        setError(`Backend API manzili mos kelmadi!\nOxirgi urinish: ${lastTechnicalError}\n\nEslatma: .env faylingizda VITE_API_URL to'g'ri yozilganini tekshiring.`);
       }
     } catch (finalErr) {
       setError(finalErr.message);
@@ -111,7 +117,7 @@ const Login = () => {
         </h1>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center mb-4 whitespace-pre-wrap">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center mb-4 whitespace-pre-wrap font-mono sticky">
             {error}
           </div>
         )}
