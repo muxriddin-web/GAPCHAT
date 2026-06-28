@@ -6,7 +6,7 @@ const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // Har qanday React versiyada 100% aniq ishlaydi
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -25,21 +25,22 @@ const Login = () => {
 
     try {
       // ========================================================
-      // ⚠️ DIQQAT / BACKEND ULANISH JOYI:
-      // Agar sizda tayyor login API bo'lsa, kodni shu yerga qo'yasiz.
+      // ⚠️ TAYYOR BACKEND APINGIZ BO'LSA, KODNI SHU YERGA QO'YASIZ.
       // Masalan: const res = await axios.post('/api/login', { usernameOrEmail, password });
       // ========================================================
 
-      // 2. PROTECTED ROUTE TO'SIG'IDAN O'TISH:
-      // Sarlavha ochilishi uchun brauzer xotirasiga kirish belgisini yozamiz.
-      // Loyihangizda ProtectedRoute qaysi nomni tekshirsa (masalan: "token" yoki "user"), o'shani yozing.
-      localStorage.setItem("token", "true"); 
-      localStorage.setItem("user", JSON.stringify({ username: usernameOrEmail }));
+      // 2. MUHIM JOYI: ProtectedRoute aynan shu "userInfo" kalitini kutyapti!
+      // Foydalanuvchi ma'lumotlarini ob'ekt ko'rinishida saqlaymiz
+      const mockUserData = { 
+        username: usernameOrEmail,
+        isLoggedIn: true 
+      };
+      
+      localStorage.setItem("userInfo", JSON.stringify(mockUserData));
 
       console.log("Muvaffaqiyatli kirildi:", usernameOrEmail);
       
-      // 3. MAKSIMAL TEZKOR NAVIGATSIYA:
-      // Hech qanday kechikishsiz srazi Bosh sahifaga o'tkazamiz
+      // 3. MAKSIMAL TEZKOR NAVIGATSIYA: Bosh sahifaga uchamiz!
       navigate("/");
 
     } catch (err) {
