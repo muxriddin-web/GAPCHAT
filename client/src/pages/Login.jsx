@@ -26,11 +26,13 @@ const Login = () => {
       return;
     }
 
-    // Node.js/Express backendlarida uchraydigan barcha real kombinatsiyalar listi
+    // 🚀 BACKENDDAGI BARCHA IMKONIYATLAR RO'YXATI (Hech biri qochib qutulolmaydi)
     const candidateRoutes = [
-      { login: "/auth/login", register: "/auth/register" },
-      { login: "/auth", register: "/users" },              // 🚀 Mashhur variant (Direct Auth)
-      { login: "/users/login", register: "/users" },        // 🚀 Mashhur variant 2
+      { login: "/users/auth", register: "/users" },               // 🛠 Traversy/Modern MERN standarti
+      { login: "/users/signin", register: "/users/signup" },       // 🛠 Klassik variant 1
+      { login: "/auth/signin", register: "/auth/signup" },         // 🛠 Klassik variant 2
+      { login: "/auth/login", register: "/auth/signup" },          // 🛠 Aralash variant
+      { login: "/auth/login", register: "/auth/register" },        // Oldingi urinishlar
       { login: "/users/login", register: "/users/register" },
       { login: "/user/login", register: "/user/register" },
       { login: "/login", register: "/register" }
@@ -40,40 +42,48 @@ const Login = () => {
     let isSuccess = false;
     let lastTechnicalError = "";
 
-    // Avtomatik mos keladigan backend yo'lini skanerlash
+    // Skanerlash sikli
     for (const route of candidateRoutes) {
-      // Hozirgi urinishdagi to'liq URL manzilini hisoblaymiz (baza URL + endpoint)
       const currentFullUrl = (API.defaults.baseURL || "") + route.login;
       
       try {
-        // 1. Login qilib ko'ramiz
-        response = await API.post(route.login, { username: usernameOrEmail, password });
+        // 1. Loginga so'rov yuboramiz
+        response = await API.post(route.login, { 
+          username: usernameOrEmail, 
+          email: usernameOrEmail, // Har ehtimolga qarshi ikkala fieldni ham yuboramiz
+          password 
+        });
         isSuccess = true;
         break; 
       } catch (loginErr) {
-        // Agar endpoint umuman mavjud bo'lmasa (404), keyingi kombinatsiyaga o'tamiz
+        // Agar 404 bo'lsa, demak bu endpoint xato, keyingisiga o'tamiz
         if (loginErr.response?.status === 404) {
-          lastTechnicalError = `Topilmadi (404): ${currentFullUrl}`;
+          lastTechnicalError = `404 -> ${currentFullUrl}`;
           continue;
         }
 
-        // 2. Agar login 404 bo'lmasa (masalan, 400 yoki 401 - foydalanuvchi topilmadi bo'lsa), demak endpoint to'g'ri!
-        // Shuning uchun orqa fonda srazi ro'yxatdan o'tkazishga urinamiz
+        // 2. Agar 404 bo'lmasa (masalan 400 yoki 401 - foydalanuvchi topilmadi bo'lsa), endpoint to'g'ri!
+        // Shuning uchun srazi ro'yxatdan o'tkazishga urinamiz
         try {
           const cleanName = usernameOrEmail.replace("@", "");
           await API.post(route.register, {
             username: usernameOrEmail,
+            email: usernameOrEmail,
             name: cleanName,
             password: password
           });
 
-          // Ro'yxatdan o'tgach, srazi login qilamiz
-          response = await API.post(route.login, { username: usernameOrEmail, password });
+          // Ro'yxatdan o'tishi bilan srazi qayta login qilamiz
+          response = await API.post(route.login, { 
+            username: usernameOrEmail, 
+            email: usernameOrEmail,
+            password 
+          });
           isSuccess = true;
           break;
         } catch (regErr) {
-          const regUrl = (API.defaults.baseURL || "") + route.register;
-          lastTechnicalError = regErr.response?.data?.message || `Xatolik: ${regUrl}`;
+          lastTechnicalError = regErr.response?.data?.message || regErr.message;
+          // Agar ro'yxatdan o'tish ham xato bersa, keyingi kombinatsiyani tekshiramiz
           continue; 
         }
       }
@@ -91,8 +101,7 @@ const Login = () => {
           throw new Error("Backend tizimi kutilmagan formatda ma'lumot qaytardi.");
         }
       } else {
-        // Agar barcha endpointlar 404 bersa, ekranga to'liq URLni chiqarib beradi
-        setError(`Backend API manzili mos kelmadi!\nOxirgi urinish: ${lastTechnicalError}\n\nEslatma: .env faylingizda VITE_API_URL to'g'ri yozilganini tekshiring.`);
+        setError(`Backend API manzili mos kelmadi!\n\nBiz barcha yo'llarni sinab ko'rdik, ammo server rad etdi.\nOxirgi xatolik: ${lastTechnicalError}\n\n💡 Maslahat: Agar backend kodi sizda bo'lsa, undagi 'routes' papkasidan login URL manzilini aniq ko'rib oling.`);
       }
     } catch (finalErr) {
       setError(finalErr.message);
@@ -117,7 +126,7 @@ const Login = () => {
         </h1>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center mb-4 whitespace-pre-wrap font-mono sticky">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center mb-4 whitespace-pre-wrap font-mono">
             {error}
           </div>
         )}
