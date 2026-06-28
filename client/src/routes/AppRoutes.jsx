@@ -5,17 +5,15 @@ import {
 } from "react-router-dom";
 
 import Home from "../pages/Home";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
-
+import Login from "../pages/Login"; // Faqat login qoldi
 import ProtectedRoute from "./ProtectedRoute";
 
 function AppRoutes() {
   return (
     <BrowserRouter>
-
       <Routes>
 
+        {/* Bosh sahifa - faqat login qilganlar kiradi */}
         <Route
           path="/"
           element={
@@ -25,18 +23,13 @@ function AppRoutes() {
           }
         />
 
+        {/* Kirish sahifasi */}
         <Route
           path="/login"
           element={<Login />}
         />
 
-        <Route
-          path="/register"
-          element={<Register />}
-        />
-
       </Routes>
-
     </BrowserRouter>
   );
 }
