@@ -150,7 +150,7 @@ const Login = () => {
         </div>
 
         <h1 className="text-4xl font-extrabold text-center tracking-wider bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 bg-clip-text text-transparent mb-8">
-          GAP
+          Gapchat
         </h1>
 
         {error && (
