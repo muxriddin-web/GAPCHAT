@@ -71,7 +71,7 @@ const Login = () => {
         const status = loginErr.response?.status;
         const resData = loginErr.response?.data;
 
-        // Express serverining standart HTML "Cannot POST" xatosi bormi?
+        // Express serverining standart HTML "Cannot POST" xatosi
         const isHtmlResponse = typeof resData === "string" && (resData.includes("<!DOCTYPE") || resData.includes("Cannot POST"));
         const isRouteNotFound = status === 404 && (isHtmlResponse || !resData);
 
