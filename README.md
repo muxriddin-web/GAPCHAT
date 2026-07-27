@@ -82,7 +82,7 @@ Optimized React components and backend services provide smooth real-time communi
 ## Clone the Repository
 
 ```bash
-git clone https://github.com/muxriddin-web/gapchat.git
+git clone https://github.com/muxriddin-web/GAPCHAT
 ```
 
 ---
@@ -90,7 +90,7 @@ git clone https://github.com/muxriddin-web/gapchat.git
 ## Navigate into the Project
 
 ```bash
-cd gapchat
+cd GAPCHAT
 ```
 
 ---
