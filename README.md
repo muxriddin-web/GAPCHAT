@@ -264,7 +264,7 @@ If you have questions, suggestions, or feedback, feel free to reach out.
 ### Project Repository
 
 ```text
-https://github.com/muxriddin-web/gapchat
+https://github.com/muxriddin-web/GAPCHAT
 ```
 
 ### Author
