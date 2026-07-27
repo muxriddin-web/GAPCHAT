@@ -26,7 +26,7 @@ const Login = () => {
       return;
     }
 
-    // Hostingda muammo bo'lmasligi uchun API manzilini qat'iy test
+    // Hostingda muammo bo'lmasligi uchun API manzilini qat'iy tekshirish
     if (!API.defaults.baseURL || !API.defaults.baseURL.includes("/api")) {
       API.defaults.baseURL = "https://gapchat.onrender.com/api";
     }
