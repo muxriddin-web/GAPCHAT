@@ -104,7 +104,7 @@ const Login = () => {
           break; // To'g'ri yo'ldamiz, shunchaki parol xato. Siklni to'xtatamiz.
         }
 
-        // Boshqa har qanday kutilmagan backend xatoligi uchun
+        // Boshqa har qanday kutilmagan backend xatoligi uchun tekshirish
         finalErrorMessage = resData?.message || loginErr.message;
         break;
       }
