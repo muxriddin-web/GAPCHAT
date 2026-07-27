@@ -66,7 +66,7 @@ const Login = () => {
         // 1. Loginga urinib ko'ramiz
         response = await API.post(route.login, authPayload);
         isSuccess = true;
-        break; // Agar login o'xshasa, sikldan darhol chiqamizek!
+        break; // Agar login o'xshasa, sikldan darhol chiqaramiz
       } catch (loginErr) {
         const status = loginErr.response?.status;
         const resData = loginErr.response?.data;
