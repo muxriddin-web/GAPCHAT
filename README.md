@@ -53,7 +53,7 @@ Optimized React components and backend services provide smooth real-time communi
 
 <div align="center">
   <a href="https://mfs-portfoliouz.netlify.app/portfolio1/projects">
-    <img src="Screenshot_3.png" alt="Demo" width="600"/>
+    <img src="Screenshot_1.png" alt="Demo" width="600"/>
   </a>
   <p><i>Click to watch the demo on my portfolio</i></p>
 </div>
