@@ -123,48 +123,109 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#030712] flex items-center justify-center p-4 relative overflow-hidden">
+    <div style={{
+      minHeight: "100vh",
+      width: "100%",
+      backgroundColor: "#030712",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "16px",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      boxSizing: "border-box"
+    }}>
       
-      {/* Orqa fondagi neon yorug'liklar */}
-      <div className="absolute w-[400px] h-[400px] bg-cyan-500/10 blur-[120px] rounded-full -top-20 -left-20 pointer-events-none"></div>
-      <div className="absolute w-[400px] h-[400px] bg-blue-600/10 blur-[120px] rounded-full -bottom-20 -right-20 pointer-events-none"></div>
-
-      {/* Asosiy Karta: Optimal o'lchamda, cho'zilib ketmagan */}
-      <div className="w-full max-w-[400px] bg-slate-900/90 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 shadow-2xl relative z-10">
+      {/* Asosiy Karta */}
+      <div style={{
+        width: "100%",
+        maxWidth: "420px",
+        backgroundColor: "rgba(15, 23, 42, 0.85)",
+        backdropFilter: "blur(16px)",
+        borderRadius: "28px",
+        padding: "36px 30px",
+        border: "1px solid rgba(51, 65, 85, 0.6)",
+        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+        boxSizing: "border-box"
+      }}>
         
         {/* Logo */}
-        <div className="flex justify-center mb-5"> 
-          <div className="w-20 h-20 rounded-2xl bg-slate-950 p-3 border border-slate-800 shadow-inner flex items-center justify-center">
-            <img src={logo} alt="GAP Logo" className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(6,182,212,0.4)]" />
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}> 
+          <div style={{
+            width: "80px",
+            height: "80px",
+            borderRadius: "20px",
+            backgroundColor: "#020617",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "1px solid rgba(51, 65, 85, 0.8)",
+            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.6)"
+          }}>
+            <img src={logo} alt="GAP Logo" style={{ width: "48px", height: "48px", objectFit: "contain" }} />
           </div>
         </div>
 
         {/* Sarlavha */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 bg-clip-text text-transparent">
+        <div style={{ textAlign: "center", marginBottom: "28px" }}>
+          <h1 style={{
+            fontSize: "32px",
+            fontWeight: "800",
+            background: "linear-gradient(to right, #22d3ee, #38bdf8, #3b82f6)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            margin: "0 0 8px 0"
+          }}>
             Gapchat
           </h1>
-          <p className="text-slate-400 text-xs mt-1.5 font-medium">
+          <p style={{ color: "#94a3b8", fontSize: "13px", margin: "0", fontWeight: "500" }}>
             Xush kelibsiz! Davom etish uchun kiring.
           </p>
         </div>
 
         {/* Xatolik */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center mb-5 font-mono">
+          <div style={{
+            backgroundColor: "rgba(239, 68, 68, 0.1)",
+            border: "1px solid rgba(239, 68, 68, 0.25)",
+            color: "#f87171",
+            fontSize: "12px",
+            padding: "12px",
+            borderRadius: "14px",
+            textAlign: "center",
+            marginBottom: "20px"
+          }}>
             {error}
           </div>
         )}
 
-        {/* Forma qismi: Elementlar orasidagi masofa aniq va qulay (space-y-4) */}
-        <form onSubmit={handleLogin} className="space-y-4">
+        {/* Forma qismi - Elementlar orasidagi masofa qulay va keng (gap: 20px) */}
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           <div>
-            <label className="text-slate-400 text-[11px] font-bold uppercase tracking-wider block mb-1.5 pl-1">
+            <label style={{
+              color: "#cbd5e1",
+              fontSize: "11px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              display: "block",
+              marginBottom: "8px",
+              paddingLeft: "4px"
+            }}>
               Nikneym yoki Email
             </label>
             <input 
               type="text" 
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all duration-200"
+              style={{
+                width: "100%",
+                backgroundColor: "#020617",
+                border: "1px solid #334155",
+                borderRadius: "14px",
+                padding: "14px 16px",
+                color: "#ffffff",
+                fontSize: "14px",
+                outline: "none",
+                boxSizing: "border-box"
+              }}
               placeholder="@nikneym"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
@@ -174,12 +235,31 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="text-slate-400 text-[11px] font-bold uppercase tracking-wider block mb-1.5 pl-1">
+            <label style={{
+              color: "#cbd5e1",
+              fontSize: "11px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              display: "block",
+              marginBottom: "8px",
+              paddingLeft: "4px"
+            }}>
               Parol
             </label>
             <input 
               type="password" 
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all duration-200"
+              style={{
+                width: "100%",
+                backgroundColor: "#020617",
+                border: "1px solid #334155",
+                borderRadius: "14px",
+                padding: "14px 16px",
+                color: "#ffffff",
+                fontSize: "14px",
+                outline: "none",
+                boxSizing: "border-box"
+              }}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -188,14 +268,35 @@ const Login = () => {
             />
           </div>
 
-          <div className="pt-2">
+          <div style={{ marginTop: "6px" }}>
             <button 
               type="submit" 
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center cursor-pointer text-sm"
+              style={{
+                width: "100%",
+                background: "linear-gradient(to right, #06b6d4, #3b82f6)",
+                color: "#ffffff",
+                fontWeight: "700",
+                padding: "15px",
+                borderRadius: "14px",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "15px",
+                boxShadow: "0 10px 20px -5px rgba(6, 182, 212, 0.4)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div style={{
+                  width: "20px",
+                  height: "20px",
+                  border: "2px solid #ffffff",
+                  borderTopColor: "transparent",
+                  borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite"
+                }}></div>
               ) : (
                 "Kirish"
               )}
