@@ -123,48 +123,48 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#030712] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen w-full bg-[#030712] flex items-center justify-center p-4 relative overflow-hidden">
       
       {/* Orqa fondagi neon yorug'liklar */}
-      <div className="absolute w-[500px] h-[500px] bg-cyan-500/20 blur-[150px] rounded-full -top-32 -left-32 pointer-events-none"></div>
-      <div className="absolute w-[500px] h- [500px] bg-blue-600/20 blur-[150px] rounded-full -bottom-32 -right-32 pointer-events-none"></div>
+      <div className="absolute w-[400px] h-[400px] bg-cyan-500/10 blur-[120px] rounded-full -top-20 -left-20 pointer-events-none"></div>
+      <div className="absolute w-[400px] h-[400px] bg-blue-600/10 blur-[120px] rounded-full -bottom-20 -right-20 pointer-events-none"></div>
 
-      {/* Asosiy Karta: Kengroq va havodor (max-w-lg) */}
-      <div className="w-full max-w-lg bg-slate-900/80 backdrop-blur-2xl p-10 sm:p-12 rounded-[2.5rem] border border-slate-700/60 shadow-[0_25px_60px_rgba(0,0,0,0.7)] relative z-10">
+      {/* Asosiy Karta: Optimal o'lchamda, cho'zilib ketmagan */}
+      <div className="w-full max-w-[400px] bg-slate-900/90 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 shadow-2xl relative z-10">
         
         {/* Logo */}
-        <div className="flex justify-center mb-6"> 
-          <div className="w-28 h-28 rounded-3xl bg-slate-950/80 p-4 border border-slate-700/80 shadow-lg flex items-center justify-center">
-            <img src={logo} alt="GAP Logo" className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.5)]" />
+        <div className="flex justify-center mb-5"> 
+          <div className="w-20 h-20 rounded-2xl bg-slate-950 p-3 border border-slate-800 shadow-inner flex items-center justify-center">
+            <img src={logo} alt="GAP Logo" className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(6,182,212,0.4)]" />
           </div>
         </div>
 
         {/* Sarlavha */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500 bg-clip-text text-transparent">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 bg-clip-text text-transparent">
             Gapchat
           </h1>
-          <p className="text-slate-400 text-base mt-2 font-medium">
+          <p className="text-slate-400 text-xs mt-1.5 font-medium">
             Xush kelibsiz! Davom etish uchun kiring.
           </p>
         </div>
 
         {/* Xatolik */}
         {error && (
-          <div className="bg-red-500/15 border border-red-500/30 text-red-300 text-sm p-4 rounded-2xl text-center mb-6 font-mono leading-relaxed">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl text-center mb-5 font-mono">
             {error}
           </div>
         )}
 
-        {/* Forma qismi - Elementlar orasidagi masofa kengaytirildi (space-y-6) */}
-        <form onSubmit={handleLogin} className="space-y-6">
+        {/* Forma qismi: Elementlar orasidagi masofa aniq va qulay (space-y-4) */}
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="text-slate-300 text-xs font-bold uppercase tracking-wider block mb-2 pl-1">
+            <label className="text-slate-400 text-[11px] font-bold uppercase tracking-wider block mb-1.5 pl-1">
               Nikneym yoki Email
             </label>
             <input 
               type="text" 
-              className="w-full bg-slate-950 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 text-base focus:outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/20 transition-all duration-200 shadow-inner"
+              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all duration-200"
               placeholder="@nikneym"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
@@ -174,12 +174,12 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="text-slate-300 text-xs font-bold uppercase tracking-wider block mb-2 pl-1">
+            <label className="text-slate-400 text-[11px] font-bold uppercase tracking-wider block mb-1.5 pl-1">
               Parol
             </label>
             <input 
               type="password" 
-              className="w-full bg-slate-950 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 text-base focus:outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/20 transition-all duration-200 shadow-inner"
+              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all duration-200"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -188,14 +188,14 @@ const Login = () => {
             />
           </div>
 
-          <div className="pt-3">
+          <div className="pt-2">
             <button 
               type="submit" 
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-xl shadow-cyan-500/30 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center cursor-pointer text-base tracking-wide"
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center cursor-pointer text-sm"
             >
               {isLoading ? (
-                <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 "Kirish"
               )}
