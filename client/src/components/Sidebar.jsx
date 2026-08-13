@@ -36,7 +36,6 @@ function Sidebar() {
   }, [currentUser?._id]);
 
   // GLOBAL SEARCH
-// 1. Mavjud global qidiruv useEffect kodi
   // 1. Global qidiruv effekti
   useEffect(() => {
     const searchGlobalUsers = async () => {
