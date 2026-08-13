@@ -116,7 +116,7 @@ export const ChatProvider = ({ children }) => {
     };
   }, [currentUser?._id]);
 
-  // Chat ochilganda eski xabarlarni yuklash
+  // Chat ochilganda eski xabarlarni yuklash jarayoni 
   useEffect(() => {
     if (!selectedUser?._id || !currentUser?._id) {
       setMessages([]);
