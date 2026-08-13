@@ -55,7 +55,6 @@ function Sidebar() {
     const delayDebounceFn = setTimeout(() => {
       searchGlobalUsers();
     }, 400);
-
     return () => clearTimeout(delayDebounceFn);
   }, [search, currentUser?._id]);
 
