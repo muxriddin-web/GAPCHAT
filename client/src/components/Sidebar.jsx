@@ -115,8 +115,7 @@ function Sidebar() {
 {/* h-[130px] pt-14 -> Hech qanday prefiksiz yozilgani uchun to'g'ridan-to'g'ri MOBILDA ishlaydi (Kattaroq joy ochdik)
   md:h-[96px] md:pt-4 -> Kompyuter (desktop) ekraniga o'tganda esa avtomatik eski holiga qaytadi
 */}
-      {/* LOGO QISMI */}
-{/* LOGO QISMI */}
+
 <div className="flex justify-center mt-12 mb-8"> 
   <img 
     src={logo} 
