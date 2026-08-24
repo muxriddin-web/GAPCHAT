@@ -30,9 +30,6 @@ function UserProfileModal({
 
   };
 
-
-
-
   // ADD CONTACT
   const addContactHandler =
     async () => {
@@ -67,9 +64,6 @@ function UserProfileModal({
 
     };
 
-
-
-
   // DELETE CHAT
   const deleteChatHandler =
     async (e) => {
@@ -94,9 +88,6 @@ function UserProfileModal({
 
         );
 
-
-
-
         // LOCAL STORAGE
         const deletedChats =
 
@@ -107,9 +98,6 @@ function UserProfileModal({
             )
 
           ) || [];
-
-
-
 
         // SAVE
         localStorage.setItem(
@@ -126,15 +114,9 @@ function UserProfileModal({
 
         );
 
-
-
-
         alert("Chat deleted");
 
         setOpen(false);
-
-
-
 
         // REFRESH
         window.location.reload();
@@ -147,15 +129,9 @@ function UserProfileModal({
 
     };
 
-
-
-
   // EMPTY
   if (!open || !user)
     return null;
-
-
-
 
   return (
 
@@ -193,16 +169,8 @@ function UserProfileModal({
 
         </button>
 
-
-
-
-
         {/* TOP */}
         <div className="h-[170px] bg-gradient-to-br from-blue-500 via-cyan-400 to-cyan-300" />
-
-
-
-
 
         {/* CONTENT */}
         <div className="px-8 pb-8 -mt-20 relative z-10">
@@ -217,10 +185,6 @@ function UserProfileModal({
             className="w-36 h-36 rounded-[32px] border-4 border-[#111827] object-cover shadow-2xl"
 
           />
-
-
-
-
 
           {/* USER INFO */}
           <div className="mt-5">
@@ -239,10 +203,6 @@ function UserProfileModal({
 
           </div>
 
-
-
-
-
           {/* BIO */}
           <div className="mt-6 bg-[#0f172a] rounded-3xl p-5 border border-white/5">
 
@@ -259,10 +219,6 @@ function UserProfileModal({
             </p>
 
           </div>
-
-
-
-
 
           {/* BUTTONS */}
           <div className="grid grid-cols-2 gap-4 mt-6">
@@ -283,10 +239,6 @@ function UserProfileModal({
               Add Contact
 
             </button>
-
-
-
-
 
             {/* DELETE */}
             <button
