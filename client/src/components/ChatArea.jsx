@@ -98,7 +98,6 @@ function ChatArea() {
     }
   };
 
-  // 3. SEND IMAGE (ImgBB)
  // 3. SEND IMAGE (ImgBB) - Xatolikni aniqlovchi yangilangan funksiya
   const sendImageHandler = async (e) => {
     const file = e.target.files[0];
