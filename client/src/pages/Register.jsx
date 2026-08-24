@@ -80,8 +80,6 @@ function Register() {
 
       <div className="w-full max-w-md bg-[#111827] border border-gray-800 rounded-3xl p-8 shadow-2xl">
 
-        {/* LOGO */}
-        {/* LOGO QISMI */}
         {/* LOGO QISMI */}
         <div className="flex justify-center mt-12 mb-8"> 
           <img 
