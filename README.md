@@ -1,4 +1,4 @@
-# GAP💬 
+# GAPCHAT💬 
 
 **GapChat** is a modern real-time messaging application built with the MERN Stack. Designed with a clean, responsive interface and powered by WebSockets, it enables users to communicate instantly through private messaging with a fast and seamless chat experience.
 
