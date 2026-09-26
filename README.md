@@ -6,7 +6,7 @@ Whether you're chatting with friends, testing real-time communication, or explor
 
 ---
 
-# ✨ Features
+# ✨ Feature
 
 ## 💬 Real-Time Messaging
 
